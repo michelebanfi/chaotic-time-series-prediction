@@ -3,7 +3,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
-import numpy as np
+import torch.nn.functional as F
+from sklearn.model_selection import train_test_split
 
 torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -14,62 +15,60 @@ t = df['time'].values
 
 print("loading data")
 
+# Split the data into training and validation sets
+train_data, val_data = train_test_split(data, test_size=0.2, shuffle=False)
+train_t, val_t = train_test_split(t, test_size=0.2, shuffle=False)
+
 # Prepare the data for PyTorch
-data_torch = torch.tensor(data, dtype=torch.float32).unsqueeze(0)  # Adding batch dimension
-target_torch = data_torch[:, 1:, :]  # Target is the next time step
+train_data_torch = torch.tensor(train_data, dtype=torch.float32).unsqueeze(0)  # Adding batch dimension
+train_target_torch = train_data_torch[:, 1:, :]  # Target is the next time step
+
+val_data_torch = torch.tensor(val_data, dtype=torch.float32).unsqueeze(0)  # Adding batch dimension
+val_target_torch = val_data_torch[:, 1:, :]  # Target is the next time step
 
 # Create DataLoader for batching
-dataset = torch.utils.data.TensorDataset(data_torch[:, :-1, :], target_torch)
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True)
+train_dataset = torch.utils.data.TensorDataset(train_data_torch[:, :-1, :], train_target_torch)
+train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=1, shuffle=True)
 
 print("data loaded")
 
 # Define the reservoir model
-class Reservoir(nn.Module):
-    def __init__(self, input_size, reservoir_size, output_size, spectral_radius=0.9, sparsity=0.1):
-        super(Reservoir, self).__init__()
+# Define the LSTM-based reservoir model
+class LSTMReservoir(nn.Module):
+    def __init__(self, input_size, reservoir_size, output_size):
+        super(LSTMReservoir, self).__init__()
         self.input_size = input_size
         self.reservoir_size = reservoir_size
         self.output_size = output_size
 
-        # Input weights
-        self.Win = nn.Parameter(torch.randn(reservoir_size, input_size))
-
-        # Reservoir weights
-        self.W = nn.Parameter(torch.randn(reservoir_size, reservoir_size))
+        # LSTM as reservoir
+        self.lstm = nn.LSTM(input_size, reservoir_size, batch_first=True)
 
         # Output weights
-        self.Wout = nn.Linear(reservoir_size, output_size)
+        self.linear1 = nn.Linear(reservoir_size, 64)
+        self.linear2 = nn.Linear(64, output_size)
 
-        # Adjust spectral radius
-        self.W.data *= spectral_radius / torch.max(torch.abs(torch.linalg.eigvals(self.W.data)))
-
-        # Apply sparsity
-        mask = (torch.rand(reservoir_size, reservoir_size) < sparsity).float()
-        self.W.data *= mask
+        # Freeze LSTM parameters
+        for param in self.lstm.parameters():
+            param.requires_grad = False
 
     def forward(self, x):
-        batch_size, seq_len, _ = x.size()
-        h = torch.zeros(batch_size, self.reservoir_size)
-        outputs = []
+        h, _ = self.lstm(x)
 
-        for t in range(seq_len):
-            h = torch.tanh(self.Win @ x[:, t, :].T + self.W @ h.T).T
-            outputs.append(self.Wout(h))
-
-        outputs = torch.stack(outputs, dim=1)
-        return outputs
+        y = F.leaky_relu(self.linear1(h))
+        y = self.linear2(y)
+        return y
 
 
 # Define the model parameters
 input_size = 3
-reservoir_size = 100
+reservoir_size = 256
 output_size = 3
 
 print("creating model")
 
 # Create the reservoir model
-model = Reservoir(input_size, reservoir_size, output_size)
+model = LSTMReservoir(input_size, reservoir_size, output_size)
 
 print("model created")
 
@@ -81,14 +80,19 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 num_epochs = 100
 
+losses = []
+accuracies = []
+
 # Training loop
 for epoch in range(num_epochs):
-    for inputs, targets in dataloader:
+    for inputs, targets in train_dataloader:
         optimizer.zero_grad()
         outputs = model(inputs)
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
+
+        losses.append(loss.item())
 
     if (epoch + 1) % 10 == 0:
         print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
@@ -96,17 +100,17 @@ for epoch in range(num_epochs):
 # Evaluate the model
 model.eval()
 with torch.no_grad():
-    predictions = model(data_torch[:, :-1, :])
-    rmse = torch.sqrt(criterion(predictions, target_torch))
-    predictions_np = predictions.squeeze(0).numpy()
-    target_np = target_torch.squeeze(0).numpy()
+    val_predictions = model(val_data_torch[:, :-1, :])
+    rmse = torch.sqrt(criterion(val_predictions, val_target_torch))
+    val_predictions_np = val_predictions.squeeze(0).numpy()
+    val_target_np = val_target_torch.squeeze(0).numpy()
     print(f'RMSE: {rmse.item():.4f}')
 
 
 # Check dimensions
 print("Shape of t:", t[1:].shape)
-print("Shape of target_np:", target_np.shape)
-print("Shape of predictions_np:", predictions_np.shape)
+print("Shape of target_np:", val_target_np.shape)
+print("Shape of predictions_np:", val_predictions_np.shape)
 
 # Plotting the predictions
 plt.figure(figsize=(15, 5))
@@ -114,8 +118,8 @@ plt.figure(figsize=(15, 5))
 # Plot each state variable separately
 for i, var_name in enumerate(['x', 'y', 'z']):
     plt.subplot(1, 3, i+1)
-    plt.plot(t[1:], target_np[:, i], label='True')
-    plt.plot(t[1:], predictions_np[:, i], label='Predicted')
+    plt.plot(val_t[1:], val_target_np[:, i], label='True')
+    plt.plot(val_t[1:], val_predictions_np[:, i], label='Predicted')
     plt.xlabel('Time')
     plt.ylabel(var_name)
     plt.legend()
@@ -123,3 +127,13 @@ for i, var_name in enumerate(['x', 'y', 'z']):
 plt.tight_layout()
 plt.savefig('lorenz_predictions.png')
 plt.show()
+plt.close()
+
+# plot the loss
+plt.plot(losses)
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Training Loss')
+plt.savefig('lorenz_loss.png')
+plt.show()
+plt.close()
