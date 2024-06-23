@@ -51,12 +51,14 @@ class Reservoir(nn.Module):
     def forward(self, x):
         batch_size, seq_len, _ = x.size()
         h = torch.zeros(batch_size, self.reservoir_size)
+        outputs = []
 
         for t in range(seq_len):
             h = torch.tanh(self.Win @ x[:, t, :].T + self.W @ h.T).T
+            outputs.append(self.Wout(h))
 
-        y = self.Wout(h)
-        return y
+        outputs = torch.stack(outputs, dim=1)
+        return outputs
 
 
 # Define the model parameters
@@ -77,7 +79,7 @@ print(model)
 # Define training parameters
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-num_epochs = 50
+num_epochs = 100
 
 # Training loop
 for epoch in range(num_epochs):
@@ -96,13 +98,28 @@ model.eval()
 with torch.no_grad():
     predictions = model(data_torch[:, :-1, :])
     rmse = torch.sqrt(criterion(predictions, target_torch))
+    predictions_np = predictions.squeeze(0).numpy()
+    target_np = target_torch.squeeze(0).numpy()
     print(f'RMSE: {rmse.item():.4f}')
 
+
+# Check dimensions
+print("Shape of t:", t[1:].shape)
+print("Shape of target_np:", target_np.shape)
+print("Shape of predictions_np:", predictions_np.shape)
+
 # Plotting the predictions
-predictions_np = predictions.squeeze(0).numpy()
-plt.plot(t[1:], predictions_np, label='Predicted')
-plt.plot(t[1:], data[1:], label='True')
-plt.xlabel('Time')
-plt.ylabel('State Variables')
-plt.legend()
+plt.figure(figsize=(15, 5))
+
+# Plot each state variable separately
+for i, var_name in enumerate(['x', 'y', 'z']):
+    plt.subplot(1, 3, i+1)
+    plt.plot(t[1:], target_np[:, i], label='True')
+    plt.plot(t[1:], predictions_np[:, i], label='Predicted')
+    plt.xlabel('Time')
+    plt.ylabel(var_name)
+    plt.legend()
+
+plt.tight_layout()
+plt.savefig('lorenz_predictions.png')
 plt.show()
