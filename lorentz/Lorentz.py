@@ -41,24 +41,53 @@ class LSTMReservoir(nn.Module):
         self.reservoir_size = reservoir_size
         self.output_size = output_size
 
-        # LSTM as reservoir
-        self.lstm = nn.LSTM(input_size, reservoir_size, batch_first=True)
+        # parameters FOR Echo State Network
+        # Input weights
+        # self.Win = nn.Parameter(torch.randn(reservoir_size, input_size))
+        # # Reservoir weights
+        # self.W = nn.Parameter(torch.randn(reservoir_size, reservoir_size))
+        # # Output weights
+        # self.Wout = nn.Linear(reservoir_size, output_size)
+        # # Adjust spectral radius
+        # self.W.data *= spectral_radius / torch.max(torch.abs(torch.linalg.eigvals(self.W.data)))
+        # # Apply sparsity
+        # mask = (torch.rand(reservoir_size, reservoir_size) < sparsity).float()
+        # self.W.data *= mask
 
+        # LSTM as reservoir
+        self.lstm = nn.LSTM(input_size, reservoir_size, num_layers=2, batch_first=True)
         # Output weights
         self.linear1 = nn.Linear(reservoir_size, 64)
         self.linear2 = nn.Linear(64, output_size)
+
 
         # Freeze LSTM parameters
         for param in self.lstm.parameters():
             param.requires_grad = False
 
+        self.dropout = nn.Dropout(0.25)
+
+    # ESN forward pass
+    # def forward(self, x):
+    #     batch_size, seq_len, _ = x.size()
+    #     h = torch.zeros(batch_size, self.reservoir_size)
+    #     outputs = []
+    #
+    #     for t in range(seq_len):
+    #         h = torch.tanh(self.Win @ x[:, t, :].T + self.W @ h.T).T
+    #         outputs.append(self.Wout(h))
+    #
+    #     outputs = torch.stack(outputs, dim=1)
+    #     return outputs
+
+    # LSTM forward pass
     def forward(self, x):
         h, _ = self.lstm(x)
 
         y = F.leaky_relu(self.linear1(h))
+        y = self.dropout(y)
         y = self.linear2(y)
         return y
-
 
 # Define the model parameters
 input_size = 3
