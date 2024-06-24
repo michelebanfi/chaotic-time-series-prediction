@@ -17,7 +17,7 @@ def generate_data(equation, t_span, y0, t_eval):
 # Define the parameters for data generation
 t_span = (0, 50)
 y0 = [1.0, 1.0, 1.0]
-t_eval = np.linspace(t_span[0], t_span[1], 100000)
+t_eval = np.linspace(t_span[0], t_span[1], 10000)
 
 # Generate the data
 t, data = generate_data(lorenz, t_span, y0, t_eval)
