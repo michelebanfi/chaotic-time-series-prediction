@@ -19,3 +19,12 @@ def harmonic_oscillator(t, state, k=1, m=1):
     dxdt = v
     dvdt = -k / m * x
     return [dxdt, dvdt]
+
+# Restricted three-body problem
+def restricted_three_body(t, state, mu=0.012277471):
+    x, y, vx, vy = state
+    r1 = ((x + mu) ** 2 + y ** 2) ** 1.5
+    r2 = ((x - 1 + mu) ** 2 + y ** 2) ** 1.5
+    dvxdt = 2 * vy + x - (1 - mu) * (x + mu) / r1 - mu * (x - 1 + mu) / r2
+    dvydt = -2 * vx + y - (1 - mu) * y / r1 - mu * y / r2
+    return [vx, vy, dvxdt, dvydt]
