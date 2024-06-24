@@ -5,19 +5,20 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 from Reservoirs.ESNReservoir import ESNReservoir
 from Reservoirs.LSTMReservoir import LSTMReservoir
-from Reservoirs.GRUReservoir import GRUReservoir
+from Benchmarks.LSTM import LSTM
 from Utils.DataLoader import loadData
 from Utils.DataEvaluator import evaluate
+import time
 
 torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Load data from CSV
-df = pd.read_csv('lorenz_data.csv')
+df = pd.read_csv('Data/lorenz_data.csv')
 data = df[['x', 'y', 'z']].values
 t = df['time'].values
 
 # Define sequence length
-seq_len = 2
+seq_len = 1
 
 # Define the model parameters
 input_size = 3
@@ -28,15 +29,34 @@ output_size = 3
 train_dataloader, val_sequences_torch, val_targets_torch, val_t = loadData(data, t, seq_len)
 
 # use the Reservoir
-model = GRUReservoir(input_size, reservoir_size, output_size, seq_len=seq_len)
+model = LSTMReservoir(input_size, reservoir_size, output_size, seq_len=seq_len)
+modelBenchmark = LSTM(input_size, 256, output_size, seq_len=seq_len)
 
 # Define training parameters
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0001)
-num_epochs = 1 # it will break with 0 epochs
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+num_epochs = 5 # it will break with 0 epochs
 
+# start counting the time
+start = time.time()
 # Train the model
-val_predictions_np, val_target_np, moel, losses = evaluate(num_epochs, criterion, optimizer, model, train_dataloader, val_sequences_torch, val_targets_torch)
+val_predictions_np, val_target_np, model, losses = (
+    evaluate(num_epochs, criterion, optimizer, model, train_dataloader, val_sequences_torch, val_targets_torch))
+
+# stop counting the time
+end = time.time()
+print('Time elapsed: ', end - start)
+
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+# start counting the time
+start = time.time()
+# Train the benchmark model
+val_predictions_np_benchmark, val_target_np_benchmark, modelBenchmark, lossesBenchmark = (
+    evaluate(num_epochs, criterion, optimizer, modelBenchmark, train_dataloader, val_sequences_torch, val_targets_torch))
+
+# stop counting the time
+end = time.time()
+print('Time elapsed: ', end - start)
 
 # Plotting the predictions
 plt.figure(figsize=(15, 5))
@@ -45,7 +65,8 @@ stepToShow = min(seq_len - 1, 4)
 for i, var_name in enumerate(['x', 'y', 'z']):
     plt.subplot(1, 3, i+1)
     plt.plot(val_t[seq_len:], val_target_np[:, stepToShow, i], label='True')
-    plt.plot(val_t[seq_len:], val_predictions_np[:, stepToShow, i], label='Predicted')
+    plt.plot(val_t[seq_len:], val_predictions_np[:, stepToShow, i], label='Predicted (Reservoir)')
+    plt.plot(val_t[seq_len:], val_predictions_np_benchmark[:, stepToShow, i], label='Predicted (Benchmark)')
     plt.xlabel('Time')
     plt.ylabel(var_name)
     plt.legend()
