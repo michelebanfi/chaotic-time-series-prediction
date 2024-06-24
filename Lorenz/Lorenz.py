@@ -5,6 +5,7 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 from Reservoirs.ESNReservoir import ESNReservoir
 from Reservoirs.LSTMReservoir import LSTMReservoir
+from Reservoirs.GRUReservoir import GRUReservoir
 from Utils.DataLoader import loadData
 from Utils.DataEvaluator import evaluate
 
@@ -27,15 +28,15 @@ output_size = 3
 train_dataloader, val_sequences_torch, val_targets_torch, val_t = loadData(data, t, seq_len)
 
 # use the Reservoir
-model = LSTMReservoir(input_size, reservoir_size, output_size, seq_len=seq_len)
+model = GRUReservoir(input_size, reservoir_size, output_size, seq_len=seq_len)
 
 # Define training parameters
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
-num_epochs = 2
+num_epochs = 1 # it will break with 0 epochs
 
 # Train the model
-model, val_predictions_np, val_target_np, losses = evaluate(num_epochs, criterion, optimizer, model, train_dataloader, val_sequences_torch, val_targets_torch)
+val_predictions_np, val_target_np, moel, losses = evaluate(num_epochs, criterion, optimizer, model, train_dataloader, val_sequences_torch, val_targets_torch)
 
 # Plotting the predictions
 plt.figure(figsize=(15, 5))
@@ -50,7 +51,7 @@ for i, var_name in enumerate(['x', 'y', 'z']):
     plt.legend()
 
 plt.tight_layout()
-plt.savefig('lorenz_predictions.png')
+plt.savefig('Media/lorenz_predictions.png')
 plt.show()
 plt.close()
 
@@ -59,6 +60,6 @@ plt.plot(losses)
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.title('Training Loss')
-plt.savefig('lorenz_loss.png')
+plt.savefig('Media/lorenz_loss.png')
 plt.show()
 plt.close()

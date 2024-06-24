@@ -15,7 +15,7 @@ t, data = generate_data(lorenz, t_span, y0, t_eval)
 # Save the data to CSV
 df = pd.DataFrame(data, columns=['x', 'y', 'z'])
 df['time'] = t
-df.to_csv('lorenz_data.csv', index=False)
+df.to_csv('Data/lorenz_data.csv', index=False)
 
 # plot the data in a 3D plot
 fig = plt.figure()
@@ -24,7 +24,7 @@ ax.plot(data[:, 0], data[:, 1], data[:, 2])
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
-plt.savefig('lorenz3D.png')
+plt.savefig('Media/lorenz3D.png')
 plt.close()
 
 # Plotting the generated data
@@ -32,5 +32,5 @@ plt.plot(t, data)
 plt.xlabel('Time')
 plt.ylabel('State Variables')
 plt.title('Lorenz System')
-plt.savefig('lorenzVariables_test.png')
+plt.savefig('Media/lorenzVariables_test.png')
 plt.close()
