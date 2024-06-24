@@ -27,12 +27,24 @@ df = pd.DataFrame(data, columns=['x', 'y', 'z'])
 df['time'] = t
 df.to_csv('lorenz_data.csv', index=False)
 
+# plot the data in a 3D plot
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot(data[:, 0], data[:, 1], data[:, 2])
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+plt.savefig('lorenz3D.png')
+plt.close()
+
+
 # Plotting the generated data
 plt.plot(t, data)
 plt.xlabel('Time')
 plt.ylabel('State Variables')
 plt.title('Lorenz System')
-plt.show()
+plt.savefig('lorenzVariables.png')
+plt.close()
 
 
 # import matplotlib.pyplot as plt
