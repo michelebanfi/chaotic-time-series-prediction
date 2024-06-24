@@ -42,6 +42,7 @@ train_targets_torch = torch.tensor(train_targets, dtype=torch.float32)
 val_sequences_torch = torch.tensor(val_sequences, dtype=torch.float32)
 val_targets_torch = torch.tensor(val_targets, dtype=torch.float32)
 
+
 # Create DataLoader for batching
 train_dataset = torch.utils.data.TensorDataset(train_sequences_torch, train_targets_torch)
 train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=1, shuffle=False)
@@ -52,18 +53,19 @@ reservoir_size = 100
 output_size = 3
 
 # use the ESNReservoir
-model = LSTMReservoir(input_size, reservoir_size, output_size, seq_len=seq_len)
+model = ESNReservoir(input_size, reservoir_size, output_size, seq_len=seq_len)
 
 # Define training parameters
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.0005)
-num_epochs = 3
+optimizer = optim.Adam(model.parameters(), lr=0.0001)
+num_epochs = 2
 
 losses = []
 accuracies = []
 
 # Training loop
 for epoch in range(num_epochs):
+
     for inputs, targets in train_dataloader:
         optimizer.zero_grad()
         outputs = model(inputs)
@@ -75,14 +77,18 @@ for epoch in range(num_epochs):
 
     print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
 
-# Evaluate the model
-model.eval()
-with torch.no_grad():
-    val_predictions = model(val_sequences_torch[:, :, :])
-    rmse = torch.sqrt(criterion(val_predictions, val_targets_torch))
-    val_predictions_np = val_predictions.squeeze(0).numpy()
-    val_target_np = val_targets_torch.squeeze(0).numpy()
-    print(f'RMSE: {rmse.item():.4f}')
+    # Evaluate the model
+    model.eval()
+    with torch.no_grad():
+        val_predictions = model(val_sequences_torch[:, :, :])
+        rmse = torch.sqrt(criterion(val_predictions, val_targets_torch))
+        val_predictions_np = val_predictions.squeeze(0).numpy()
+        val_target_np = val_targets_torch.squeeze(0).numpy()
+        print(f'RMSE: {rmse.item():.4f}')
+
+    model.train()
+
+# test the model
 
 # Check dimensions
 print("Shape of t:", t[1:].shape)
@@ -93,10 +99,11 @@ print("Shape of predictions_np:", val_predictions_np.shape)
 plt.figure(figsize=(15, 5))
 
 # Plot each state variable separately
+stepToShow = min(seq_len - 1, 4)
 for i, var_name in enumerate(['x', 'y', 'z']):
     plt.subplot(1, 3, i+1)
-    plt.plot(val_t[seq_len:], val_target_np[:, 1, i], label='True')
-    plt.plot(val_t[seq_len:], val_predictions_np[:, 1, i], label='Predicted')
+    plt.plot(val_t[seq_len:], val_target_np[:, stepToShow, i], label='True')
+    plt.plot(val_t[seq_len:], val_predictions_np[:, stepToShow, i], label='Predicted')
     plt.xlabel('Time')
     plt.ylabel(var_name)
     plt.legend()

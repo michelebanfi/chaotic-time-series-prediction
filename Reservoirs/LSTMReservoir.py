@@ -22,7 +22,7 @@ class LSTMReservoir(nn.Module):
         for param in self.lstm.parameters():
             param.requires_grad = False
 
-        self.dropout = nn.Dropout(0)
+        self.dropout = nn.Dropout(0.2)
 
     # LSTM forward pass
     def forward(self, x):
@@ -36,4 +36,4 @@ class LSTMReservoir(nn.Module):
             out = self.linear2(out)
             x = torch.cat((x, out), 1)
 
-        return x[:, self.seq_len - 1:, :]
+        return x[:, -self.seq_len:, :]
