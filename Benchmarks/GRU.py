@@ -2,16 +2,16 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class LSTM(nn.Module):
+class GRU(nn.Module):
     def __init__(self, input_size, reservoir_size, output_size, seq_len=1):
-        super(LSTM, self).__init__()
+        super(GRU, self).__init__()
         self.input_size = input_size
         self.reservoir_size = reservoir_size
         self.output_size = output_size
         self.seq_len = seq_len
 
         # LSTM as reservoir
-        self.lstm = nn.LSTM(input_size, reservoir_size, num_layers=2, batch_first=True)
+        self.gru = nn.GRU(input_size, reservoir_size, num_layers=2, batch_first=True)
 
         # Output weights
         self.linear1 = nn.Linear(reservoir_size, 64)
@@ -25,8 +25,8 @@ class LSTM(nn.Module):
         z = torch.zeros(x.size(0) + self.seq_len, 1, self.output_size, dtype=torch.float32)
         z[:x.size(0), :, :] = x[:, :, :]
         for i in range(self.seq_len):
-            input = z[i:i+x.size(0), :, :]
-            h, _ = self.lstm(input)
+            input = z[i:i + x.size(0), :, :]
+            h, _ = self.gru(input)
 
             h = h[-1, :, :]
 
@@ -38,5 +38,5 @@ class LSTM(nn.Module):
             x = torch.cat((x, out), 0)
 
         x = x[-self.seq_len:, :, :]
-        x = x.transpose(0,1)
+        x = x.transpose(0, 1)
         return x

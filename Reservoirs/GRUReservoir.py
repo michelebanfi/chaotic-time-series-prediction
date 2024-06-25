@@ -27,13 +27,21 @@ class GRUReservoir(nn.Module):
     # LSTM forward pass
     def forward(self, x):
 
+        z = torch.zeros(x.size(0) + self.seq_len, 1, self.output_size, dtype=torch.float32)
+        z[:x.size(0), :, :] = x[:, :, :]
         for i in range(self.seq_len):
-            z = x[:, i, :].unsqueeze(1)
-            h, _ = self.gru(z)
+            input = z[i:i + x.size(0), :, :]
+            h, _ = self.gru(input)
+
+            h = h[-1, :, :]
 
             out = F.leaky_relu(self.linear1(h))
             out = self.dropout(out)
             out = self.linear2(out)
-            x = torch.cat((x, out), 1)
 
-        return x[:, -self.seq_len:, :]
+            out = out.unsqueeze(1)
+            x = torch.cat((x, out), 0)
+
+        x = x[-self.seq_len:, :, :]
+        x = x.transpose(0, 1)
+        return x

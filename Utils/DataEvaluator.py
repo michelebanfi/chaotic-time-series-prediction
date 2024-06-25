@@ -1,13 +1,16 @@
 import torch
 
-def evaluate(num_epochs, criterion, optimizer, model, train_dataloader, val_sequences_torch, val_targets_torch):
+def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, val_sequences_torch, val_targets_torch):
     losses = []
 
     for epoch in range(num_epochs):
 
+        currentModel.train()
         for inputs, targets in train_dataloader:
             optimizer.zero_grad()
-            outputs = model(inputs)
+            outputs = currentModel(inputs)
+            targets = targets[-1, :, :]
+            outputs = outputs.squeeze(0)
             loss = criterion(outputs, targets)
             loss.backward()
             optimizer.step()
@@ -17,14 +20,14 @@ def evaluate(num_epochs, criterion, optimizer, model, train_dataloader, val_sequ
         print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
 
         # Evaluate the model
-        model.eval()
+        currentModel.eval()
         with torch.no_grad():
-            val_predictions = model(val_sequences_torch[:, :, :])
+            val_predictions = torch.zeros(val_targets_torch.size(0), val_targets_torch.size(1), val_sequences_torch.size(2))
+            for i in range(val_sequences_torch.size(0)):
+                val_predictions[i,:,:] = currentModel(val_sequences_torch[i, :, :].unsqueeze(0))
             rmse = torch.sqrt(criterion(val_predictions, val_targets_torch))
             val_predictions_np = val_predictions.squeeze(0).numpy()
             val_target_np = val_targets_torch.squeeze(0).numpy()
             print(f'RMSE: {rmse.item():.4f}')
 
-        model.train()
-
-    return val_predictions_np, val_target_np, model, losses
+    return val_predictions_np, val_target_np, losses
