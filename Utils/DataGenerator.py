@@ -1,4 +1,5 @@
 from scipy.integrate import solve_ivp
+import numpy as np
 
 # general function to generate data
 def generate_data(equation, t_span, y0, t_eval):
@@ -21,10 +22,17 @@ def harmonic_oscillator(t, state, k=1, m=1):
     return [dxdt, dvdt]
 
 # Restricted three-body problem
-def restricted_three_body(t, state, mu=0.012277471):
+def restricted_three_body(t, state):
+    # x, y, vx, vy
     x, y, vx, vy = state
-    r1 = ((x + mu) ** 2 + y ** 2) ** 1.5
-    r2 = ((x - 1 + mu) ** 2 + y ** 2) ** 1.5
-    dvxdt = 2 * vy + x - (1 - mu) * (x + mu) / r1 - mu * (x - 1 + mu) / r2
-    dvydt = -2 * vx + y - (1 - mu) * y / r1 - mu * y / r2
-    return [vx, vy, dvxdt, dvydt]
+    m1 = 1
+    m2 = 1
+    x1 = 1
+    y1 = 1
+    x2 = -1
+    y2 = -1
+    r1 = np.sqrt((x - x1) ** 2 + (y - y1) ** 2)
+    r2 = np.sqrt((x - x2) ** 2 + (y - y2) ** 2)
+    ax = - m1 * ((x - x1) / r1 ** 3) - m2 * ((x - x2) / r2 ** 3)
+    ay = - m1 * ((y - y1) / r1 ** 3) - m2 * ((y - y2) / r2 ** 3)
+    return [vx, vy, ax, ay]

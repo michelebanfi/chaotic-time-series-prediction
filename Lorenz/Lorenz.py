@@ -5,6 +5,7 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 from Reservoirs.GRUReservoir import GRUReservoir
 from Reservoirs.LSTMReservoir import LSTMReservoir
+from Reservoirs.ESNReservoir import ESNReservoir
 from Benchmarks.LSTM import LSTM
 from Benchmarks.GRU import GRU
 from Utils.DataLoader import loadData
@@ -25,7 +26,8 @@ seq_len = 1
 input_size = 3
 reservoir_size = 128
 output_size = 3
-batch_size = 1
+batch_size = 10
+num_epochs = 3 # it will break with 0 epochs
 
 # Load the data
 train_dataloader, val_sequences_torch, val_targets_torch, val_t = loadData(data, t, seq_len, batch_size=batch_size)
@@ -37,10 +39,6 @@ modelBenchmark = LSTM(input_size, reservoir_size, output_size, seq_len=seq_len)
 # Define training parameters
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-num_epochs = 1 # it will break with 0 epochs
-
-lurido = val_sequences_torch
-zozzo = val_targets_torch
 
 # start counting the time
 start = time.time()
@@ -58,7 +56,7 @@ criterion = nn.MSELoss()
 start = time.time()
 # Train the benchmark model
 val_predictions_np_benchmark, val_target_np_benchmark, lossesBenchmark = (
-    evaluate(num_epochs, criterion, optimizer, model, train_dataloader, lurido, zozzo))
+    evaluate(num_epochs, criterion, optimizer, modelBenchmark, train_dataloader, val_sequences_torch, val_targets_torch))
 
 # stop counting the time
 end = time.time()
@@ -81,7 +79,7 @@ for i, var_name in enumerate(['x', 'y', 'z']):
 
 plt.tight_layout()
 plt.savefig('Media/lorenz_predictions.png')
-#plt.show()
+plt.show()
 plt.close()
 
 # plot the loss
@@ -89,8 +87,8 @@ plt.plot(losses)
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.title('Training Loss')
-plt.savefig('Media/lorenz_loss.png')
-#plt.show()
+plt.savefig('Media/lorenz_loss_reservoir.png')
+plt.show()
 plt.close()
 
 # plot the loss
@@ -99,5 +97,5 @@ plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.title('Training Loss')
 plt.savefig('Media/lorenz_loss.png')
-#plt.show()
+plt.show()
 plt.close()
