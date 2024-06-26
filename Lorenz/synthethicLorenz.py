@@ -12,6 +12,11 @@ t_eval = np.linspace(t_span[0], t_span[1], 100000)
 # Generate the data
 t, data = generate_data(lorenz, t_span, y0, t_eval)
 
+sampling = 100
+# sample the data every 100 points
+t = t[::sampling]
+data = data[::sampling]
+
 # Save the data to CSV
 df = pd.DataFrame(data, columns=['x', 'y', 'z'])
 df['time'] = t
