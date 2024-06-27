@@ -3,15 +3,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class LSTM(nn.Module):
-    def __init__(self, input_size, reservoir_size, output_size, seq_len=1):
+    def __init__(self, input_size, reservoir_size, output_size, num_layers=1, pred_len=1):
         super(LSTM, self).__init__()
         self.input_size = input_size
         self.reservoir_size = reservoir_size
         self.output_size = output_size
-        self.seq_len = seq_len
+        self.pred_len = pred_len
+        self.num_layers = num_layers
 
         # LSTM as reservoir
-        self.lstm = nn.LSTM(input_size, reservoir_size, num_layers=2, batch_first=True)
+        self.lstm = nn.LSTM(input_size, reservoir_size, num_layers=num_layers, batch_first=True)
 
         # Output weights
         self.linear1 = nn.Linear(reservoir_size, 64)
@@ -22,21 +23,23 @@ class LSTM(nn.Module):
     # LSTM forward pass
     def forward(self, x):
 
-        z = torch.zeros(x.size(0) + self.seq_len, 1, self.output_size, dtype=torch.float32)
-        z[:x.size(0), :, :] = x[:, :, :]
-        for i in range(self.seq_len):
-            input = z[i:i+x.size(0), :, :]
+        # input shape: (amount of sequences, sequences length, dimensionality of problem)
+        input_len = x.size(1)
+        #z = torch.zeros(x.size(0), input_len + self.pred_len, x.size(2), dtype=torch.float32)
+        #z[:, :input_len, :] = x
+        for i in range(self.pred_len):
+            # get the input and the previous outputs
+            input = x[:, i:i+input_len, :]
+
+            # the output will be just on the last hidden state
             h, _ = self.lstm(input)
-
-            h = h[-1, :, :]
-
+            h = h[:, -1, :]
             out = F.leaky_relu(self.linear1(h))
             out = self.dropout(out)
             out = self.linear2(out)
 
             out = out.unsqueeze(1)
-            x = torch.cat((x, out), 0)
+            x = torch.cat((x, out), dim=1)
 
-        x = x[-self.seq_len:, :, :]
-        x = x.transpose(0,1)
+        x = x[:, -self.pred_len:, :]
         return x

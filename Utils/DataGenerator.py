@@ -4,7 +4,7 @@ import numpy as np
 # general function to generate data
 def generate_data(equation, t_span, y0, t_eval, args=()):
     sol = solve_ivp(equation, t_span, y0, t_eval=t_eval, args=args)
-    print(sol.message)
+    #print(sol.message)
     return sol.t, sol.y.T
 
 # Lorenz system
