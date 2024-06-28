@@ -1,71 +1,134 @@
-import pandas as pd
 import torch
-import torch.nn as nn
+import pandas as pd
+import numpy as np
 import torch.optim as optim
-import matplotlib.pyplot as plt
-from Reservoirs.GRUReservoir import GRUReservoir
-from Reservoirs.LSTMReservoir import LSTMReservoir
-from Reservoirs.ESNReservoir import ESNReservoir
-from Benchmarks.LSTM import LSTM
-from Benchmarks.GRU import GRU
-from Utils.DataLoader import loadData
-from Utils.DataEvaluator import evaluate
+from torch.optim.lr_scheduler import StepLR
 import time
 
-torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+import sys
+sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Utils")
+from DataEvaluator import evaluate
+from DataLoader import loadData
+
+sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Benchmarks")
+from GRU import GRU
+
+sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Reservoirs")
+from GRUReservoir import GRUReservoir
+
+import matplotlib.pyplot as plt
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print("Working on:", device)
+print(30*"-")
 
 # Load data from CSV
-df = pd.read_csv('Data/lorenz_data.csv')
+df = pd.read_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Data/lorenz_data.csv')
 data = df[['x', 'y', 'z']].values
+data = torch.tensor(df[['x', 'y','z']].values)
+
 t = df['time'].values
 
 # Define sequence length
-seq_len = 1
+pred_len = 100
+input_len = 400
 
 # Define the model parameters
-input_size = 3
+io_size = 3
 reservoir_size = 128
-output_size = 3
 batch_size = 10
 num_epochs = 3 # it will break with 0 epochs
 
 # Load the data
-train_dataloader, val_sequences_torch, val_targets_torch, val_t = loadData(data, t, seq_len, batch_size=batch_size)
+print("Loading data...")
+train_t, train_dataloader, val_t, val_dataloader = loadData(data, t, pred_len, input_len)
+print("Train batches:", len(train_dataloader))
+print("Train input sequences:", len(train_dataloader.dataset))
+print("Validation batches:", len(val_dataloader))
+print("Validation input sequences:", len(val_dataloader.dataset))
+print(30*"-")
 
-# use the Reservoir
-model = LSTMReservoir(input_size, reservoir_size, output_size, seq_len=seq_len)
-modelBenchmark = LSTM(input_size, reservoir_size, output_size, seq_len=seq_len)
 
-# Define training parameters
-criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+# init the models
+model = GRUReservoir(io_size, reservoir_size, io_size, pred_len=pred_len, num_layers=2).to(device)
+modelBenchmark = GRU(io_size, reservoir_size, io_size, pred_len=pred_len, num_layers=2).to(device)
 
+
+# NMSE weighted as criterion
+def NormalizedMeanSquaredError(y_pred, y_true):
+    device = y_pred.get_device()
+    pred_len = y_pred.size(1)
+    batch_size = y_pred.size(0)
+
+    squared_dist = torch.sum((y_true - y_pred)** 2, dim=2) # squared euclidean distances between predictions
+    true_squared_norm = torch.sum(y_true ** 2, dim=2)
+    nmse = squared_dist / true_squared_norm
+    # actual (from above) shape: (batch size, prediction length)
+    # as a neutral transformation for an overall error just take the mean on the prediction length and then on the batch size
+    # WEIGHTED
+    weights = torch.arange(start=1,end=pred_len+1,step=1).flip(dims=(0,)).to(device)
+    weights = weights/weights.sum()
+    aggregated_nmse = torch.zeros(batch_size)
+    for batch in range(batch_size):
+        aggregated_nmse[batch] = torch.dot(nmse[batch], weights)
+    # aggregated_nmse = torch.mean(torch.mean(nmse, dim=1), dim=0) # UNWEIGHTED
+    aggregated_nmse = torch.mean(aggregated_nmse, dim=0)
+    return aggregated_nmse
+
+
+
+
+
+### RESERVOIR
+# Define training setup
+# criterion
+criterion = NormalizedMeanSquaredError
+# optimizer
+optimizer = optim.Adam(model.parameters(), lr=0.01)
+# scheduler
+scheduler = StepLR(optimizer, step_size=10, gamma=0.3)
+print("Reservoir training...")
 # start counting the time
 start = time.time()
 # Train the model
-val_predictions_np, val_target_np, losses = (
-    evaluate(num_epochs, criterion, optimizer, model, train_dataloader, val_sequences_torch, val_targets_torch))
-
+val_results, train_losses = (
+    evaluate(num_epochs, criterion, optimizer, model, train_dataloader, val_dataloader, device, scheduler))
 # stop counting the time
 end = time.time()
-print('Time elapsed: ', end - start)
+print('Time elapsed: ', end - start, "s")
+print(30*"-")
 
-optimizer = optim.Adam(modelBenchmark.parameters(), lr=0.001)
-criterion = nn.MSELoss()
+
+
+
+
+### BENCHMARK MODEL
+print("Benchmark training...")
+# training setup
+# criterion
+criterion = NormalizedMeanSquaredError
+# optimizer
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+# scheduler
+scheduler = StepLR(optimizer, step_size=10, gamma=0.3)
 # start counting the time
 start = time.time()
 # Train the benchmark model
-val_predictions_np_benchmark, val_target_np_benchmark, lossesBenchmark = (
-    evaluate(num_epochs, criterion, optimizer, modelBenchmark, train_dataloader, val_sequences_torch, val_targets_torch))
-
+val_results_benchmark, train_losses_benchmark = (
+    evaluate(num_epochs, criterion, optimizer, modelBenchmark, train_dataloader, val_dataloader, device, scheduler))
 # stop counting the time
 end = time.time()
-print('Time elapsed: ', end - start)
+print('Time elapsed: ', end - start, "s")
+print(30*"-")
+
+
+
+
 
 # Plotting the predictions
 plt.figure(figsize=(15, 5))
 
-stepToShow = min(seq_len, 100)
+stepToShow = min(pred_len, 100)
 for i, var_name in enumerate(['x', 'y', 'z']):
     plt.subplot(1, 4, i+1)
     plt.plot(val_t[stepToShow:], val_target_np[:, stepToShow - 1, i], label='True')

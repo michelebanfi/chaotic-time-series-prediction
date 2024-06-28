@@ -19,7 +19,7 @@ class ESN(nn.Module):
         z = torch.zeros(x.size(0) + self.seq_len, 1, self.output_size, dtype=torch.float32)
         z[:x.size(0), :, :] = x[:, :, :]
         for i in range(self.seq_len):
-            input = z[i:i+x.size(0), :, :]
+            input = x[i:i+x.size(0), :, :]
             h, _ = self.lstm(input)
 
             h = h[-1, :, :]

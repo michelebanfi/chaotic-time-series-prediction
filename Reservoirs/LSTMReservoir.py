@@ -28,8 +28,6 @@ class LSTMReservoir(nn.Module):
 
         # input shape: (amount of sequences, sequences length, dimensionality of problem)
         input_len = x.size(1)
-        #z = torch.zeros(x.size(0), input_len + self.pred_len, x.size(2), dtype=torch.float32)
-        #z[:, :input_len, :] = x
         for i in range(self.pred_len):
             # get the input and the previous outputs
             input = x[:, i:i+input_len, :]
