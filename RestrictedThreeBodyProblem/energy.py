@@ -1,13 +1,19 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+diego = True
 
 # Load data from CSV
-df = pd.read_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/3BP.csv')
+if diego:
+    df = pd.read_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/3BP.csv')
+    constants = pd.read_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/constants.csv')
+else:
+    df = pd.read_csv('Data/3BP.csv')
+    constants = pd.read_csv("Data/constants.csv")
 data = df[['x', 'y', 'vx', 'vy']].values
 t = df['time'].values
 
 # calculate the energy
-constants = pd.read_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/constants.csv')
+
 m1 = constants['mass'][0]
 m2 = constants['mass'][1]
 x1 = constants['x'][0]
@@ -38,7 +44,10 @@ plt.ylabel('Energy')
 plt.legend()
 plt.title('Energy of the Restricted Three-Body Problem')
 plt.grid()
-plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Media/3BP_energy.png')
+if diego:
+    plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Media/3BP_energy.png')
+else:
+    plt.savefig("Media/3BP_energy.png")
 plt.close()
 
 

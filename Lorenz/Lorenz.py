@@ -6,15 +6,22 @@ from torch.optim.lr_scheduler import StepLR
 import time
 
 import sys
-sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Utils")
-from DataEvaluator import evaluate
-from DataLoader import loadData
+diego = True
+if diego:
+    sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Utils")
+    from DataEvaluator import evaluate
+    from DataLoader import loadData
 
-sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Benchmarks")
-from GRU import GRU
+    sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Benchmarks")
+    from GRU import GRU
 
-sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Reservoirs")
-from GRUReservoir import GRUReservoir
+    sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Reservoirs")
+    from GRUReservoir import GRUReservoir
+else:
+    from Utils.DataEvaluator import  evaluate
+    from Utils.DataLoader import loadData
+    from Benchmarks.GRU import GRU
+    from Reservoirs.GRUReservoir import GRUReservoir
 
 import matplotlib.pyplot as plt
 
@@ -23,7 +30,10 @@ print("Working on:", device)
 print(30*"-")
 
 # Load data from CSV
-df = pd.read_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Data/lorenz_data.csv')
+if diego:
+    df = pd.read_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Data/lorenz_data.csv')
+else:
+    df = pd.read_csv('Data/lorenz_data.csv')
 data = df[['x', 'y', 'z']].values
 data = torch.tensor(df[['x', 'y','z']].values)
 
