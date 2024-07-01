@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 import time
 
-diego = True
+diego = False
 import sys
 if diego:
     sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Utils")
@@ -22,6 +22,8 @@ else:
     from Utils.DataLoader import loadData
     from Benchmarks.GRU import GRU
     from Reservoirs.GRUReservoir import GRUReservoir
+    from Benchmarks.LSTM import LSTM
+    from Reservoirs.LSTMReservoir import LSTMReservoir
 
 import matplotlib.pyplot as plt
 
@@ -30,13 +32,18 @@ print("Working on:", device)
 print(30*"-")
 
 # Load data from CSV
-if diego:
-    df = pd.read_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/3BP.csv')
-else:
-    df = pd.read_csv('Data/3BP.csv')
-data = torch.tensor(df[['x', 'y']].values)
-
-t = df['time'].values
+# if diego:
+#     df = pd.read_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/3BP.csv')
+# else:
+#     df = pd.read_csv('Data/3BP.csv')
+# data = torch.tensor(df[['x', 'y']].values)
+#
+# num_files = 2
+# data = torch.tensor()
+# for i in range(0, num_files):
+#     data[i]
+#
+# t = df['time'].values
 
 # Define sequences length
 pred_len = 100
@@ -44,13 +51,15 @@ input_len = 400
 
 # Define the model parameters
 io_size = 2
-reservoir_size = 64
-num_epochs = 50
+reservoir_size = 16
+num_epochs = 3
+
+dimensionality = 2
 
 ### LOAD DATA
 # Load the data
 print("Loading data...")
-train_t, train_dataloader, val_t, val_dataloader = loadData(data, t, pred_len, input_len)
+train_t, train_dataloader, val_t, val_dataloader = loadData(dimensionality, pred_len, input_len)
 print("Train batches:", len(train_dataloader))
 print("Train input sequences:", len(train_dataloader.dataset))
 print("Validation batches:", len(val_dataloader))
@@ -58,12 +67,14 @@ print("Validation input sequences:", len(val_dataloader.dataset))
 print(30*"-")
 
 # init the models
-model = GRUReservoir(io_size, reservoir_size, io_size, num_layers=2, pred_len=pred_len).to(device)
-modelBenchmark = GRU(io_size, reservoir_size, io_size, num_layers=2, pred_len=pred_len).to(device)
+model = LSTMReservoir(io_size, reservoir_size, io_size, num_layers=2, pred_len=pred_len).to(device)
+modelBenchmark = LSTM(io_size, reservoir_size, io_size, num_layers=2, pred_len=pred_len).to(device)
 
 # NMSE weighted as criterion
 def NormalizedMeanSquaredError(y_pred, y_true):
     device = y_pred.get_device()
+    if device == -1:
+        device = 'cpu'
     pred_len = y_pred.size(1)
     batch_size = y_pred.size(0)
 
@@ -109,7 +120,7 @@ print("Benchmark training...")
 # criterion
 criterion = NormalizedMeanSquaredError
 # optimizer
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(modelBenchmark.parameters(), lr=0.001)
 # scheduler
 scheduler = StepLR(optimizer, step_size=10, gamma=0.2)
 # start counting the time
@@ -122,7 +133,6 @@ end = time.time()
 print('Time elapsed: ', end - start, "s")
 print(30*"-")
 
-### PLOTS
 # Plotting the predictions
 plt.figure(figsize=(15, 5))
 

@@ -13,6 +13,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Define the parameters for data generation
+# t_span = (0, int(1e3))
+# t_eval = np.linspace(t_span[0], t_span[1], int(1e8))
+# y0 = [95, 0, 5, 5]
+
+# second orbit
 t_span = (0, int(1e3))
 t_eval = np.linspace(t_span[0], t_span[1], int(1e8))
 y0 = [95, 0, 5, 5]
@@ -40,11 +45,17 @@ data = data[::sampling]
 
 # Save the data to CSV
 df = pd.DataFrame(data, columns=['x', 'y', 'vx', 'vy'])
+
+# remove the last 500 points
+df = df[:-500]
+data = data[:-500]
+t = t[:-500]
+
 df['time'] = t
 if diego:
     df.to_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/3BP.csv', index=False)
 else:
-    df.to_csv("Data/3BP.csv", index = False)
+    df.to_csv("Data/3BP_0.csv", index = False)
 
 plt.figure(figsize=(10, 6))
 plt.plot(data[:, 0], data[:, 1], label='Trajectory of the third body')
@@ -59,7 +70,7 @@ plt.grid()
 if diego:
     plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Media/3BP.png')
 else:
-    plt.savefig("Media/3BP.png")
+    plt.savefig("Media/3BP_0.png")
 plt.close()
 
 
@@ -74,5 +85,5 @@ plt.grid()
 if diego:
     plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Media/3BP_orbit.png')
 else:
-    plt.savefig("Media/3BP_orbit.png")
+    plt.savefig("Media/3BP_orbit_0.png")
 plt.close()

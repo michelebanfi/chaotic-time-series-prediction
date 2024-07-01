@@ -7,7 +7,7 @@ if diego:
     df = pd.read_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/3BP.csv')
     constants = pd.read_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/constants.csv')
 else:
-    df = pd.read_csv('Data/3BP.csv')
+    df = pd.read_csv('Data/3BP_2.csv')
     constants = pd.read_csv("Data/constants.csv")
 data = df[['x', 'y', 'vx', 'vy']].values
 t = df['time'].values
