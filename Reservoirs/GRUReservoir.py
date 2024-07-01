@@ -15,8 +15,8 @@ class GRUReservoir(nn.Module):
         self.gru = nn.GRU(input_size, reservoir_size, num_layers=num_layers, batch_first=True)
 
         # Output weights
-        self.linear1 = nn.Linear(reservoir_size, 64)
-        self.linear2 = nn.Linear(64, output_size)
+        self.linear1 = nn.Linear(reservoir_size, 512)
+        self.linear2 = nn.Linear(512, output_size)
 
         # Freeze LSTM parameters
         for param in self.gru.parameters():

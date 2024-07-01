@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 import time
 
-diego = True
+diego = False
 import sys
 if diego:
     sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Utils")
@@ -23,7 +23,7 @@ else:
     from Utils.DataEvaluator import evaluate
     from Utils.DataLoader import loadData
     from Benchmarks.GRU import GRU
-    from Reservoirs.GRUReservoir import GRUReservoir
+    from Reservoirs.ESNReservoir import ESNReservoir
     from Benchmarks.LSTM import LSTM
     from Reservoirs.LSTMReservoir import LSTMReservoir
 
@@ -55,7 +55,7 @@ print("Validation input sequences:", len(val_dataloader.dataset))
 print(30*"-")
 
 # init the models
-model = LSTMReservoir(io_size, reservoir_size, io_size, num_layers=1, pred_len=pred_len).to(device)
+model = ESNReservoir(io_size, reservoir_size, io_size, pred_len=pred_len).to(device)
 modelBenchmark = LSTM(io_size, reservoir_size, io_size, num_layers=1, pred_len=pred_len).to(device)
 
 # NMSE weighted as criterion
@@ -72,7 +72,7 @@ def NormalizedMeanSquaredError(y_pred, y_true):
     # actual (from above) shape: (batch size, prediction length)
     # as a neutral transformation for an overall error just take the mean on the prediction length and then on the batch size
     # WEIGHTED
-    weights = torch.arange(start=1,end=pred_len+1,step=1).flip(dims=(0,)).square().to(device)
+    weights = torch.arange(start=1,end=pred_len+1,step=1).flip(dims=(0,)).pow(4).to(device)
     weights = weights/weights.sum()
     aggregated_nmse = torch.zeros(batch_size)
     for batch in range(batch_size):
@@ -80,8 +80,6 @@ def NormalizedMeanSquaredError(y_pred, y_true):
     # aggregated_nmse = torch.mean(torch.mean(nmse, dim=1), dim=0) # UNWEIGHTED
     aggregated_nmse = torch.mean(aggregated_nmse, dim=0)
     return aggregated_nmse
-
-
 
 ### RESERVOIR
 # Define training setup
