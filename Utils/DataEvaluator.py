@@ -3,10 +3,12 @@ import numpy as np
 
 def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, val_dataloader, device, scheduler=None):
     train_losses = []
-    val_best_loss = 100
+    val_best_loss = np.inf
     val_best_results = {'inputs':[], 'predictions':[], 'targets':[], 'losses':[]}
 
     for epoch in range(num_epochs):
+
+        running_loss = []
         
         val_results = {'inputs':[], 'predictions':[], 'targets':[], 'losses':[]}
 
@@ -20,6 +22,7 @@ def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, v
             loss.backward()
             optimizer.step()
             train_losses.append(loss.item())
+            running_loss.append(loss.item())
 
         # Evaluate the model
         currentModel.eval()
@@ -31,7 +34,7 @@ def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, v
                 val_results['inputs'].append(val_inputs)
                 val_results['predictions'].append(val_predictions)
                 val_results['targets'].append(val_targets)
-                val_results['losses'].append(val_loss)
+                val_results['losses'].append(val_loss.cpu().item())
 
             val_mean_loss = np.mean(val_results["losses"])
             if val_mean_loss < val_best_loss:
@@ -40,7 +43,7 @@ def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, v
                 print("!!! BEST MODEL !!!")
 
         # end of epoch    
-        print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.3f}, Validation loss: {val_mean_loss:.3f}')
+        print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {np.mean(running_loss):.3f}, Validation loss: {val_mean_loss:.3f}')
         if scheduler is not None:
             print("Learning rate: %.5f" % scheduler.get_last_lr()[0])
             scheduler.step() 

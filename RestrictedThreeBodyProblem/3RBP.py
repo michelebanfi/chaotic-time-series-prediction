@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 import time
 
-diego = False
+diego = True
 import sys
 if diego:
     sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Utils")
@@ -14,9 +14,11 @@ if diego:
 
     sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Benchmarks")
     from GRU import GRU
+    from LSTM import LSTM
 
     sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Reservoirs")
     from GRUReservoir import GRUReservoir
+    from LSTMReservoir import LSTMReservoir
 else:
     from Utils.DataEvaluator import evaluate
     from Utils.DataLoader import loadData
@@ -31,28 +33,14 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("Working on:", device)
 print(30*"-")
 
-# Load data from CSV
-# if diego:
-#     df = pd.read_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/3BP.csv')
-# else:
-#     df = pd.read_csv('Data/3BP.csv')
-# data = torch.tensor(df[['x', 'y']].values)
-#
-# num_files = 2
-# data = torch.tensor()
-# for i in range(0, num_files):
-#     data[i]
-#
-# t = df['time'].values
-
 # Define sequences length
 pred_len = 100
 input_len = 400
 
 # Define the model parameters
 io_size = 2
-reservoir_size = 64
-num_epochs = 10
+reservoir_size = 8
+num_epochs = 20
 
 dimensionality = 2
 
@@ -67,8 +55,8 @@ print("Validation input sequences:", len(val_dataloader.dataset))
 print(30*"-")
 
 # init the models
-model = LSTMReservoir(io_size, reservoir_size, io_size, num_layers=2, pred_len=pred_len).to(device)
-modelBenchmark = LSTM(io_size, reservoir_size, io_size, num_layers=2, pred_len=pred_len).to(device)
+model = LSTMReservoir(io_size, reservoir_size, io_size, num_layers=1, pred_len=pred_len).to(device)
+modelBenchmark = LSTM(io_size, reservoir_size, io_size, num_layers=1, pred_len=pred_len).to(device)
 
 # NMSE weighted as criterion
 def NormalizedMeanSquaredError(y_pred, y_true):
@@ -84,7 +72,7 @@ def NormalizedMeanSquaredError(y_pred, y_true):
     # actual (from above) shape: (batch size, prediction length)
     # as a neutral transformation for an overall error just take the mean on the prediction length and then on the batch size
     # WEIGHTED
-    weights = torch.arange(start=1,end=pred_len+1,step=1).flip(dims=(0,)).to(device)
+    weights = torch.arange(start=1,end=pred_len+1,step=1).flip(dims=(0,)).square().to(device)
     weights = weights/weights.sum()
     aggregated_nmse = torch.zeros(batch_size)
     for batch in range(batch_size):
@@ -102,7 +90,7 @@ criterion = NormalizedMeanSquaredError
 # optimizer
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 # scheduler
-scheduler = StepLR(optimizer, step_size=5, gamma=0.1)
+scheduler = StepLR(optimizer, step_size=5, gamma=0.5)
 print("Reservoir training...")
 # start counting the time
 start = time.time()
@@ -122,7 +110,7 @@ criterion = NormalizedMeanSquaredError
 # optimizer
 optimizer = optim.Adam(modelBenchmark.parameters(), lr=0.001)
 # scheduler
-scheduler = StepLR(optimizer, step_size=5, gamma=0.1)
+scheduler = StepLR(optimizer, step_size=5, gamma=0.5)
 # start counting the time
 start = time.time()
 # Train the benchmark model
@@ -133,10 +121,11 @@ end = time.time()
 print('Time elapsed: ', end - start, "s")
 print(30*"-")
 
+### PLOTS
 # Plotting the predictions
-plt.figure(figsize=(15, 5))
+plt.figure(figsize=(15, 15))
 
-how_many_plots = min(6, len(val_dataloader.dataset))
+how_many_plots = min(4, len(val_dataloader.dataset))
 n_sequences = len(val_dataloader.dataset)
 sequence_to_plot = torch.randint(0, n_sequences, (how_many_plots,))
 
