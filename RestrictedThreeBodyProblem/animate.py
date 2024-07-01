@@ -28,10 +28,10 @@ ax.set_ylabel('y')
 ax.set_title('Restricted Three-Body Problem')
 
 # plot the trajectory of the third body
-line, = ax.plot([], [], label='Trajectory of the third body')
-scat = ax.scatter([], [], color='blue', label='Cristiano Ronaldo', s=30)
+line, = ax.plot([], [], label='Trajectory of the earth')
+scat = ax.scatter([], [], color='blue', label='Moon', s=30)
 earth = Circle((x1, y1), 5, color='green', edgecolor='black', label='Earth')  # Adjusted size of Earth
-sun = Circle((x2, y2), 7, color='red', edgecolor='black', label='Udine')        # Adjusted size of Sun
+sun = Circle((x2, y2), 7, color='red', edgecolor='black', label='Sun')        # Adjusted size of Sun
 ax.add_patch(earth)
 ax.add_patch(sun)
 ax.legend()

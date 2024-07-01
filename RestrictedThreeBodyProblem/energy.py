@@ -1,6 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-diego = True
+diego = False
 
 # Load data from CSV
 if diego:

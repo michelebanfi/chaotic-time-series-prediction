@@ -1,5 +1,5 @@
 import sys
-diego = True
+diego = False
 if diego:
     sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Utils")
     from DataGenerator import generate_data
