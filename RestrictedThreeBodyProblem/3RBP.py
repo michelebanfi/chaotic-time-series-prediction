@@ -51,8 +51,8 @@ input_len = 400
 
 # Define the model parameters
 io_size = 2
-reservoir_size = 16
-num_epochs = 3
+reservoir_size = 64
+num_epochs = 10
 
 dimensionality = 2
 
@@ -100,9 +100,9 @@ def NormalizedMeanSquaredError(y_pred, y_true):
 # criterion
 criterion = NormalizedMeanSquaredError
 # optimizer
-optimizer = optim.Adam(model.parameters(), lr=0.01)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 # scheduler
-scheduler = StepLR(optimizer, step_size=10, gamma=0.2)
+scheduler = StepLR(optimizer, step_size=5, gamma=0.1)
 print("Reservoir training...")
 # start counting the time
 start = time.time()
@@ -122,7 +122,7 @@ criterion = NormalizedMeanSquaredError
 # optimizer
 optimizer = optim.Adam(modelBenchmark.parameters(), lr=0.001)
 # scheduler
-scheduler = StepLR(optimizer, step_size=10, gamma=0.2)
+scheduler = StepLR(optimizer, step_size=5, gamma=0.1)
 # start counting the time
 start = time.time()
 # Train the benchmark model
