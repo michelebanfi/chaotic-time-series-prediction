@@ -24,6 +24,7 @@ else:
     from Utils.DataEvaluator import evaluate
     from Utils.DataLoader import loadData
     from Benchmarks.GRU import GRU
+    from Reservoirs.GRUReservoir import GRUReservoir
     from Reservoirs.ESNReservoir import ESNReservoir
     from Benchmarks.LSTM import LSTM
     from Reservoirs.LSTMReservoir import LSTMReservoir
@@ -40,13 +41,13 @@ input_len = 400
 
 # Define the model parameters
 io_size = 2
-reservoir_size = 8
-num_epochs = 30
+reservoir_size = 256
+num_epochs = 20
 
 ### LOAD DATA
 # Load the data
 print("Loading data...")
-train_t, train_dataloader, val_t, val_dataloader = loadData(io_size, pred_len, input_len)
+train_t, train_dataloader, val_t, val_dataloader = loadData(io_size, pred_len, input_len, file="3BP")
 print("Train batches:", len(train_dataloader))
 print("Train input sequences:", len(train_dataloader.dataset))
 print("Validation batches:", len(val_dataloader))
@@ -82,8 +83,7 @@ def NormalizedMeanSquaredError(y_pred, y_true):
 
 ### RESERVOIR
 # Define training setup
-# criterion
-criterion = NormalizedMeanSquaredError
+criterion = torch.nn.L1Loss()
 # optimizer
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 # scheduler

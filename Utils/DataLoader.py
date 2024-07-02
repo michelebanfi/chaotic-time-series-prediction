@@ -5,7 +5,7 @@ import torch
 diego = True
 
 # load data function
-def loadData(dimensionality, pred_len, input_len, train_batch_size=1, val_batch_size=1):
+def loadData(dimensionality, pred_len, input_len, train_batch_size=1, val_batch_size=1, file="3BP"):
     num_files = 3
 
     train_sequences = torch.zeros(size=(1, input_len, dimensionality), dtype=torch.float32)
@@ -18,9 +18,14 @@ def loadData(dimensionality, pred_len, input_len, train_batch_size=1, val_batch_
         if diego:
             df = pd.read_csv(f"D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/3BP_{i}.csv")
         else:
-            df = pd.read_csv(f"Data/3BP_{i}.csv")
+            df = pd.read_csv(f"Data/{file}_{i}.csv")
 
-        data = torch.tensor(df[['x', 'y']].values)
+        if file == "3BP":
+            variables = ['x', 'y',]
+        elif file == "lorenz":
+            variables = ['x', 'y', 'z']
+
+        data = torch.tensor(df[variables].values)
         t = df['time'].values
 
         # Split the data into training and validation sets
