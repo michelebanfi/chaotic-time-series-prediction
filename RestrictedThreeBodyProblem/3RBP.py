@@ -70,14 +70,15 @@ def NormalizedMeanSquaredError(y_pred, y_true):
     true_squared_norm = torch.sum(y_true ** 2, dim=2)
     nmse = squared_dist / true_squared_norm
     # actual (from above) shape: (batch size, prediction length)
-    # as a neutral transformation for an overall error just take the mean on the prediction length and then on the batch size
     # WEIGHTED
-    weights = torch.arange(start=1,end=pred_len+1,step=1).flip(dims=(0,)).pow(4).to(device)
+    base = torch.tensor(2)
+    weights = base.pow(-torch.arange(start=1,end=pred_len+1,step=1)).to(device)
     weights = weights/weights.sum()
     aggregated_nmse = torch.zeros(batch_size)
     for batch in range(batch_size):
         aggregated_nmse[batch] = torch.dot(nmse[batch], weights)
-    # aggregated_nmse = torch.mean(torch.mean(nmse, dim=1), dim=0) # UNWEIGHTED
+    # UNWEIGHTED
+    # aggregated_nmse = torch.mean(torch.mean(nmse, dim=1), dim=0) 
     aggregated_nmse = torch.mean(aggregated_nmse, dim=0)
     return aggregated_nmse
 

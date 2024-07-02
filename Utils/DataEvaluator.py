@@ -6,9 +6,12 @@ def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, v
     val_best_loss = np.inf
     val_best_results = {'inputs':[], 'predictions':[], 'targets':[], 'losses':[]}
     max_patience = 6
+    patience = max_patience
 
     for epoch in range(num_epochs):
         ## begin of epoch
+        print("")
+        print(5*">", "New epoch", 5*"<")
         running_loss = []
         val_results = {'inputs':[], 'predictions':[], 'targets':[], 'losses':[]}
         patience-=1
