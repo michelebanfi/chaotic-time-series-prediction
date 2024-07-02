@@ -26,6 +26,7 @@ class ESNReservoir(nn.Module):
         mask = (torch.rand(reservoir_size, reservoir_size) < sparsity).float()
         self.W.data *= mask
 
+
     def forward(self, x):
         device = x.device
         h = torch.zeros(1, self.reservoir_size).to(device)
@@ -36,7 +37,7 @@ class ESNReservoir(nn.Module):
             input = x[0, t, :]
             input = input.unsqueeze(0)
             # get hidden state from the point extracted and the previous hidden state
-            h = torch.tanh(self.Win @ input.T + self.W @ h.T).T
+            h = F.leaky_relu(self.Win @ input.T + self.W @ h.T).T
             # if the time reached the input lenght we start concatenating outputs in order to pick them in the next round
             if t >= input_len-1:
                 # calculate the output

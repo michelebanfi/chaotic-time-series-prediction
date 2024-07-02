@@ -11,6 +11,7 @@ if diego:
     sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Utils")
     from DataEvaluator import evaluate
     from DataLoader import loadData
+    from Losses import NormalizedMeanSquaredError
 
     sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Benchmarks")
     from GRU import GRU
@@ -37,54 +38,28 @@ print(30*"-")
 
 # Define sequences length
 pred_len = 100
-input_len = 400
+input_len = 100
 
 # Define the model parameters
 io_size = 2
-reservoir_size = 256
 num_epochs = 20
 
 ### LOAD DATA
 # Load the data
 print("Loading data...")
-train_t, train_dataloader, val_t, val_dataloader = loadData(io_size, pred_len, input_len, file="3BP")
+train_t, train_dataloader, val_t, val_dataloader = loadData(pred_len, input_len, file="3BP", train_samples=100, val_samples=10)
 print("Train batches:", len(train_dataloader))
 print("Train input sequences:", len(train_dataloader.dataset))
 print("Validation batches:", len(val_dataloader))
 print("Validation input sequences:", len(val_dataloader.dataset))
 print(30*"-")
 
-# init the models
-model = ESNReservoir(io_size, reservoir_size, io_size, pred_len=pred_len).to(device)
-modelBenchmark = LSTM(io_size, reservoir_size, io_size, num_layers=1, pred_len=pred_len).to(device)
-
-# NMSE weighted as criterion
-def NormalizedMeanSquaredError(y_pred, y_true):
-    device = y_pred.get_device()
-    if device == -1:
-        device = 'cpu'
-    pred_len = y_pred.size(1)
-    batch_size = y_pred.size(0)
-
-    squared_dist = torch.sum((y_true - y_pred)** 2, dim=2) # squared euclidean distances between predictions
-    true_squared_norm = torch.sum(y_true ** 2, dim=2)
-    nmse = squared_dist / true_squared_norm
-    # actual (from above) shape: (batch size, prediction length)
-    # WEIGHTED
-    base = torch.tensor(2, dtype=torch.float32)
-    weights = base.pow(-torch.arange(start=1,end=pred_len+1,step=1)).to(device)
-    weights = weights/weights.sum()
-    aggregated_nmse = torch.zeros(batch_size)
-    for batch in range(batch_size):
-        aggregated_nmse[batch] = torch.dot(nmse[batch], weights)
-    # UNWEIGHTED
-    # aggregated_nmse = torch.mean(torch.mean(nmse, dim=1), dim=0) 
-    aggregated_nmse = torch.mean(aggregated_nmse, dim=0)
-    return aggregated_nmse
+model = ESNReservoir(io_size, 128, io_size, pred_len=pred_len).to(device)
+modelBenchmark = LSTM(io_size, 128, io_size, num_layers=1, pred_len=pred_len).to(device)
 
 ### RESERVOIR
 # Define training setup
-criterion = torch.nn.L1Loss()
+criterion = NormalizedMeanSquaredError
 # optimizer
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 # scheduler

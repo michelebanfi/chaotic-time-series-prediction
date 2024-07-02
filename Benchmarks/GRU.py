@@ -18,7 +18,7 @@ class GRU(nn.Module):
         self.linear1 = nn.Linear(reservoir_size, 64)
         self.linear2 = nn.Linear(64, output_size)
 
-        self.dropout = nn.Dropout(0.2)
+        self.dropout = nn.Dropout(0.3)
 
     # LSTM forward pass
     def forward(self, x):
@@ -40,5 +40,5 @@ class GRU(nn.Module):
             x = torch.cat((x, out), dim=1)
 
         x = x[:, -self.pred_len:, :]
-        return x
+        
         return x

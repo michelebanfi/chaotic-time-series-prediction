@@ -5,8 +5,15 @@ import torch
 diego = False
 
 # load data function
-def loadData(dimensionality, pred_len, input_len, train_batch_size=1, val_batch_size=1, file="3BP"):
+def loadData(pred_len, input_len, train_batch_size=1, val_batch_size=1, file="3BP", train_samples=100, val_samples=100):
     num_files = 3
+    
+    if file == "3BP":
+        variables = ['x', 'y']
+    elif file == "lorenz":
+        variables = ['x', 'y', 'z']
+
+    dimensionality = len(variables)
 
     train_sequences = torch.zeros(size=(1, input_len, dimensionality), dtype=torch.float32)
     train_targets = torch.zeros(size=(1, pred_len, dimensionality), dtype=torch.float32)
@@ -16,14 +23,9 @@ def loadData(dimensionality, pred_len, input_len, train_batch_size=1, val_batch_
 
     for i in range(0, num_files):
         if diego:
-            df = pd.read_csv(f"D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/3BP_{i}.csv")
+            df = pd.read_csv(f"D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Data/{file}_{i}.csv")
         else:
             df = pd.read_csv(f"Data/{file}_{i}.csv")
-
-        if file == "3BP":
-            variables = ['x', 'y',]
-        elif file == "lorenz":
-            variables = ['x', 'y', 'z']
 
         data = torch.tensor(df[variables].values)
         t = df['time'].values
@@ -57,8 +59,8 @@ def loadData(dimensionality, pred_len, input_len, train_batch_size=1, val_batch_
             return inputs, targets
 
         # Create sequences for training and validation
-        train_seq, train_tar = create_sequences(train_data, pred_len, input_len, n_samples=10)
-        val_seq, val_tar = create_sequences(val_data, pred_len, input_len, n_samples=10)
+        train_seq, train_tar = create_sequences(train_data, pred_len, input_len, n_samples=train_samples)
+        val_seq, val_tar = create_sequences(val_data, pred_len, input_len, n_samples=val_samples)
 
         # Concatenate the sequences
         train_sequences = torch.cat((train_sequences, train_seq), dim=0)
@@ -74,9 +76,9 @@ def loadData(dimensionality, pred_len, input_len, train_batch_size=1, val_batch_
 
     # Create DataLoader for batching
     train_dataset = torch.utils.data.TensorDataset(train_sequences, train_targets)
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=train_batch_size, shuffle=False)
 
     val_dataset = torch.utils.data.TensorDataset(val_sequences, val_targets)
-    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=val_batch_size, shuffle=True)
+    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=val_batch_size, shuffle=False)
 
     return train_t, train_dataloader, val_t, val_dataloader
