@@ -35,7 +35,7 @@ print("Working on:", device)
 print(30*"-")
 
 # Define sequences length
-pred_len = 1
+pred_len = 2
 input_len = 100
 
 # Define the model parameters
@@ -45,7 +45,7 @@ num_epochs = 100
 ### LOAD DATA
 # Load the data
 print("Loading data...")
-train_t, train_dataloader, val_t, val_dataloader = loadData(pred_len, input_len, file="lorenz", train_samples=200, val_samples=20)
+train_t, train_dataloader, val_t, val_dataloader = loadData(pred_len, input_len, file="lorenz", train_samples=100, val_samples=10)
 print("Train batches:", len(train_dataloader))
 print("Train input sequences:", len(train_dataloader.dataset))
 print("Validation batches:", len(val_dataloader))
@@ -97,47 +97,6 @@ end = time.time()
 print('Time elapsed: ', end - start, "s")
 print(30*"-")
 
-# use the trained models to predict the validation data and compute the NRMSE
-# firstly load the data
-df = pd.read_csv("Data/lorenz_data_test.csv")
-data = torch.tensor(df[['x', 'y', 'z']].values)
-t = df['time'].values
-
-# split the data into warmup and test
-n = int(len(data) * 0.8)
-data_train, data_test = data[:n], data[n:]
-t_train, t_test = t[:n], t[n:]
-
-# unsqueeze the data
-data_train = data_train.unsqueeze(0)
-
-# evaluate the models
-model.pred_len = data_test.size(0)
-modelBenchmark.pred_len = data_test.size(0)
-
-outputs = model(data_train.to(device))
-outputs_benchmark = modelBenchmark(data_train.to(device))
-
-# plot the 3 variables separated
-plt.figure(figsize=(15, 15))
-for i in range(3):
-    plt.subplot(3, 1, i+1)
-    plt.plot(t_train, data_train[0, :, i].cpu(), label='Train')
-    plt.plot(t_test, data_test[:, i].cpu(), label='Test')
-    plt.plot(t_test, outputs[0, :, i].cpu().detach(), label='Predicted (Reservoir)')
-    plt.plot(t_test, outputs_benchmark[0, :, i].cpu().detach(), label='Predicted (Benchmark)')
-    plt.xlabel('Time')
-    plt.ylabel(f'Variable {i+1}')
-    plt.legend()
-    plt.grid()
-plt.tight_layout()
-if diego:
-    plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Media/lorenz_generations.png')
-else:
-    plt.savefig('Media/lorenz_generations.png')
-plt.close()
-
-
 
 
 # Plotting the predictions
@@ -170,3 +129,51 @@ if diego:
 else:
     plt.savefig('Media/lorenz_prediction.png')
 plt.close()
+
+
+
+
+print("Predicting...")
+# use the trained models to predict the validation data and compute the NRMSE
+# firstly load the data
+if diego:
+    df = pd.read_csv("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Data/lorenz_data_test.csv")
+else:
+    df = pd.read_csv("Data/lorenz_data_test.csv")
+data = torch.tensor(df[['x', 'y', 'z']].values).float()
+t = df['time'].values
+
+# split the data into warmup and test
+n = 100
+data_train, data_test = data[:n], data[n:n+100]
+t_train, t_test = t[:n], t[n:n+100]
+
+# unsqueeze the data
+data_train = data_train.unsqueeze(0)
+
+# evaluate the models
+model.pred_len = data_test.size(0)
+modelBenchmark.pred_len = data_test.size(0)
+
+outputs = model(data_train.to(device))
+outputs_benchmark = modelBenchmark(data_train.to(device))
+
+# plot the 3 variables separated
+plt.figure(figsize=(15, 15))
+for i in range(3):
+    plt.subplot(3, 1, i+1)
+    plt.plot(t_train, data_train[0, :, i].cpu(), label='Train')
+    plt.plot(t_test, data_test[:, i].cpu(), label='Test')
+    plt.plot(t_test, outputs[0, :, i].cpu().detach(), label='Predicted (Reservoir)')
+    plt.plot(t_test, outputs_benchmark[0, :, i].cpu().detach(), label='Predicted (Benchmark)')
+    plt.xlabel('Time')
+    plt.ylabel(f'Variable {i+1}')
+    plt.legend()
+    plt.grid()
+plt.tight_layout()
+if diego:
+    plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Media/lorenz_generations.png')
+else:
+    plt.savefig('Media/lorenz_generations.png')
+plt.close()
+
