@@ -42,7 +42,7 @@ def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, v
                 val_results['losses'].append(val_loss.cpu().item())
 
             val_mean_loss = np.mean(val_results["losses"])
-            if val_best_loss - val_mean_loss > 1e-4: # if the best model is sensibly worst then the current
+            if val_best_loss - val_mean_loss > 1e-6: # if the best model is sensibly worst then the current
                 # save best model results
                 val_best_loss = val_mean_loss
                 val_best_results = val_results 
@@ -52,7 +52,7 @@ def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, v
 
         ## end of epoch  
         # show info
-        print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {np.mean(running_loss):.3f}, Validation loss: {val_mean_loss:.3f}')
+        print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {np.mean(running_loss):.5f}, Validation loss: {val_mean_loss:.5f}')
         # scheduler
         if scheduler is not None:
             print("Learning rate: %.5f" % scheduler.get_last_lr()[0])
