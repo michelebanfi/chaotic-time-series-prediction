@@ -39,8 +39,8 @@ input_len = 400
 
 # Define the model parameters
 io_size = 2
-reservoir_size = 8
-num_epochs = 20
+reservoir_size = 16
+num_epochs = 30
 
 dimensionality = 2
 
