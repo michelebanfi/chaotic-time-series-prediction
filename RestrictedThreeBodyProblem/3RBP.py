@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 import time
 
-diego = True
+diego = False
 import sys
 if diego:
     sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Utils")
@@ -54,7 +54,6 @@ print("Validation batches:", len(val_dataloader))
 print("Validation input sequences:", len(val_dataloader.dataset))
 print(30*"-")
 
-# init the models
 model = ESNReservoir(io_size, 128, io_size, pred_len=pred_len).to(device)
 modelBenchmark = LSTM(io_size, 128, io_size, num_layers=1, pred_len=pred_len).to(device)
 
