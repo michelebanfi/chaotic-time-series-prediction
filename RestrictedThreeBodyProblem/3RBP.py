@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 import time
 
-diego = False
+diego = True
 import sys
 if diego:
     sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Utils")
@@ -19,6 +19,7 @@ if diego:
     sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Reservoirs")
     from GRUReservoir import GRUReservoir
     from LSTMReservoir import LSTMReservoir
+    from ESNReservoir import ESNReservoir
 else:
     from Utils.DataEvaluator import evaluate
     from Utils.DataLoader import loadData
@@ -39,7 +40,7 @@ input_len = 400
 
 # Define the model parameters
 io_size = 2
-reservoir_size = 16
+reservoir_size = 8
 num_epochs = 30
 
 ### LOAD DATA
