@@ -58,10 +58,6 @@ model = ESNReservoir(io_size, 1024, io_size, pred_len=pred_len).to(device)
 modelBenchmark = GRU(io_size, 512, io_size, pred_len=pred_len, num_layers=1).to(device)
 
 
-
-
-
-
 ### RESERVOIR
 # Define training setup
 # criterion
@@ -82,9 +78,6 @@ print('Time elapsed: ', end - start, "s")
 print(30*"-")
 
 
-
-
-
 ### BENCHMARK MODEL
 print("Benchmark training...")
 # training setup
@@ -103,6 +96,47 @@ val_results_benchmark, train_losses_benchmark = (
 end = time.time()
 print('Time elapsed: ', end - start, "s")
 print(30*"-")
+
+# use the trained models to predict the validation data and compute the NRMSE
+# firstly load the data
+df = pd.read_csv("Data/lorenz_data_test.csv")
+data = torch.tensor(df[['x', 'y', 'z']].values)
+t = df['time'].values
+
+# split the data into warmup and test
+n = int(len(data) * 0.8)
+data_train, data_test = data[:n], data[n:]
+t_train, t_test = t[:n], t[n:]
+
+# unsqueeze the data
+data_train = data_train.unsqueeze(0)
+
+# evaluate the models
+model.pred_len = data_test.size(0)
+modelBenchmark.pred_len = data_test.size(0)
+
+outputs = model(data_train.to(device))
+outputs_benchmark = modelBenchmark(data_train.to(device))
+
+# plot the 3 variables separated
+plt.figure(figsize=(15, 15))
+for i in range(3):
+    plt.subplot(3, 1, i+1)
+    plt.plot(t_train, data_train[0, :, i].cpu(), label='Train')
+    plt.plot(t_test, data_test[:, i].cpu(), label='Test')
+    plt.plot(t_test, outputs[0, :, i].cpu().detach(), label='Predicted (Reservoir)')
+    plt.plot(t_test, outputs_benchmark[0, :, i].cpu().detach(), label='Predicted (Benchmark)')
+    plt.xlabel('Time')
+    plt.ylabel(f'Variable {i+1}')
+    plt.legend()
+    plt.grid()
+plt.tight_layout()
+if diego:
+    plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Media/lorenz_generations.png')
+else:
+    plt.savefig('Media/lorenz_generations.png')
+plt.close()
+
 
 
 
