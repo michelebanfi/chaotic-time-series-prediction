@@ -18,8 +18,8 @@ class LSTMReservoir(nn.Module):
             param.requires_grad = False
 
         # Output weights
-        self.linear1 = nn.Linear(reservoir_size, 64)
-        self.linear2 = nn.Linear(64, output_size)
+        self.linear1 = nn.Linear(reservoir_size, 512)
+        self.linear2 = nn.Linear(512, output_size)
 
         self.dropout = nn.Dropout(0.2)
 

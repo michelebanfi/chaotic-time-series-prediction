@@ -3,12 +3,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class ESNReservoir(nn.Module):
-    def __init__(self, input_size, reservoir_size, output_size, seq_len, spectral_radius=0.9, sparsity=0.1):
+    def __init__(self, input_size, reservoir_size, output_size, pred_len, spectral_radius=0.9, sparsity=0.1):
         super(ESNReservoir, self).__init__()
         self.input_size = input_size
         self.reservoir_size = reservoir_size
         self.output_size = output_size
-        self.seq_len = seq_len
+        self.pred_len = pred_len
 
         # Input weights
         self.Win = nn.Parameter(torch.randn(reservoir_size, input_size))
@@ -28,11 +28,14 @@ class ESNReservoir(nn.Module):
 
     def forward(self, x):
         h = torch.zeros(1, self.reservoir_size)
+        input_len = x.size(1)
 
-        for t in range(self.seq_len):
-            h = torch.tanh(self.Win @ x[:, t, :].T + self.W @ h.T).T
+        for t in range(self.pred_len):
+            input = x[0, t, :]
+            input = input.unsqueeze(0)
+            h = torch.tanh(self.Win @ input.T + self.W @ h.T).T
             output = self.Wout(h)
             output = output.unsqueeze(1)
             x = torch.cat((x, output), dim=1)
 
-        return x[:, -self.seq_len:, :]
+        return x[:, -self.pred_len:, :]

@@ -2,7 +2,7 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import torch
 
-diego = True
+diego = False
 
 # load data function
 def loadData(dimensionality, pred_len, input_len, train_batch_size=1, val_batch_size=1):
