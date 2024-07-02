@@ -5,13 +5,15 @@ def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, v
     train_losses = []
     val_best_loss = np.inf
     val_best_results = {'inputs':[], 'predictions':[], 'targets':[], 'losses':[]}
+    max_patience = 6
 
     for epoch in range(num_epochs):
-
+        ## begin of epoch
         running_loss = []
-        
         val_results = {'inputs':[], 'predictions':[], 'targets':[], 'losses':[]}
+        patience-=1
 
+        ## epoch
         # Train the model
         currentModel.train()
         for inputs, targets in train_dataloader:
@@ -37,15 +39,24 @@ def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, v
                 val_results['losses'].append(val_loss.cpu().item())
 
             val_mean_loss = np.mean(val_results["losses"])
-            if val_mean_loss < val_best_loss:
+            if val_best_loss - val_mean_loss > 1e-4: # if the best model is sensibly worst then the current
+                # save best model results
                 val_best_loss = val_mean_loss
-                val_best_results = val_results
+                val_best_results = val_results 
+                # restore patience
+                patience = max_patience
                 print("!!! BEST MODEL !!!")
 
-        # end of epoch    
+        ## end of epoch  
+        # show info
         print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {np.mean(running_loss):.3f}, Validation loss: {val_mean_loss:.3f}')
+        # scheduler
         if scheduler is not None:
             print("Learning rate: %.5f" % scheduler.get_last_lr()[0])
             scheduler.step() 
+        # patience  
+        if patience == 0:
+            print("Ran out of patience")
+            break
 
     return val_best_results, train_losses
