@@ -37,11 +37,11 @@ class ESNReservoir(nn.Module):
             input = input.unsqueeze(0)
             # get hidden state from the point extracted and the previous hidden state
             h = torch.tanh(self.Win @ input.T + self.W @ h.T).T
-            # caluculate the output
-            output = self.Wout(h)
-            output = output.unsqueeze(1)
             # if the time reached the input lenght we start concatenating outputs in order to pick them in the next round
             if t >= input_len-1:
+                # calculate the output
+                output = self.Wout(h)
+                output = output.unsqueeze(1)
                 x = torch.cat((x, output), dim=1)
 
         return x[:, -self.pred_len:, :]
