@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
 import time
 
-diego = True
+diego = False
 import sys
 if diego:
     sys.path.append("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Utils")
@@ -71,7 +71,7 @@ def NormalizedMeanSquaredError(y_pred, y_true):
     nmse = squared_dist / true_squared_norm
     # actual (from above) shape: (batch size, prediction length)
     # WEIGHTED
-    base = torch.tensor(2)
+    base = torch.tensor(2, dtype=torch.float32)
     weights = base.pow(-torch.arange(start=1,end=pred_len+1,step=1)).to(device)
     weights = weights/weights.sum()
     aggregated_nmse = torch.zeros(batch_size)
