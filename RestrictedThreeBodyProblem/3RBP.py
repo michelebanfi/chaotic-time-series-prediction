@@ -42,12 +42,10 @@ io_size = 2
 reservoir_size = 16
 num_epochs = 30
 
-dimensionality = 2
-
 ### LOAD DATA
 # Load the data
 print("Loading data...")
-train_t, train_dataloader, val_t, val_dataloader = loadData(dimensionality, pred_len, input_len)
+train_t, train_dataloader, val_t, val_dataloader = loadData(io_size, pred_len, input_len)
 print("Train batches:", len(train_dataloader))
 print("Train input sequences:", len(train_dataloader.dataset))
 print("Validation batches:", len(val_dataloader))
