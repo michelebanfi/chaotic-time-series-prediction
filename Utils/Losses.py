@@ -12,7 +12,7 @@ def NormalizedMeanSquaredError(y_pred, y_true):
     nmse = squared_dist / true_squared_norm
     # actual (from above) shape: (batch size, prediction length)
     # WEIGHTED
-    base = torch.tensor(1, dtype=torch.float32)
+    base = torch.tensor(3, dtype=torch.float32)
     weights = base.pow(-torch.arange(start=1,end=pred_len+1,step=1)).to(device)
     weights = weights/weights.sum()
     aggregated_nmse = torch.zeros(batch_size)

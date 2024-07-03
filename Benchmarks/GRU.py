@@ -18,7 +18,7 @@ class GRU(nn.Module):
         self.linear1 = nn.Linear(reservoir_size, 64)
         self.linear2 = nn.Linear(64, output_size)
 
-        self.dropout = nn.Dropout(0.3)
+        self.dropout = nn.Dropout(0.2)
 
     # LSTM forward pass
     def forward(self, x):

@@ -35,7 +35,7 @@ print("Working on:", device)
 print(30*"-")
 
 # Define sequences length
-pred_len = 2
+pred_len = 1
 input_len = 100
 
 # Define the model parameters
@@ -45,7 +45,7 @@ num_epochs = 100
 ### LOAD DATA
 # Load the data
 print("Loading data...")
-train_t, train_dataloader, val_t, val_dataloader = loadData(pred_len, input_len, file="lorenz", train_samples=100, val_samples=10)
+train_t, train_dataloader, val_t, val_dataloader = loadData(pred_len, input_len, file="lorenz", train_samples=200, val_samples=20)
 print("Train batches:", len(train_dataloader))
 print("Train input sequences:", len(train_dataloader.dataset))
 print("Validation batches:", len(val_dataloader))
@@ -54,7 +54,7 @@ print(30*"-")
 
 
 # init the models
-model = ESNReservoir(io_size, 1024, io_size, pred_len=pred_len).to(device)
+model = ESNReservoir(io_size, 2048, io_size, pred_len=pred_len).to(device)
 modelBenchmark = GRU(io_size, 512, io_size, pred_len=pred_len, num_layers=1).to(device)
 
 
@@ -65,7 +65,7 @@ criterion = NormalizedMeanSquaredError
 # optimizer
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 # scheduler
-scheduler = StepLR(optimizer, step_size=4, gamma=0.5)
+scheduler = StepLR(optimizer, step_size=4, gamma=0.45)
 print("Reservoir training...")
 # start counting the time
 start = time.time()
@@ -86,7 +86,7 @@ criterion = NormalizedMeanSquaredError
 # optimizer
 optimizer = optim.Adam(modelBenchmark.parameters(), lr=0.001)
 # scheduler
-scheduler = StepLR(optimizer, step_size=4, gamma=0.5)
+scheduler = StepLR(optimizer, step_size=4, gamma=0.45)
 # start counting the time
 start = time.time()
 # Train the benchmark model
@@ -98,7 +98,7 @@ print('Time elapsed: ', end - start, "s")
 print(30*"-")
 
 
-
+print("Plot validation...")
 # Plotting the predictions
 plt.figure(figsize=(15, 15))
 
@@ -109,12 +109,12 @@ sequence_to_plot = torch.randint(0, n_sequences, (how_many_plots,))
 batch_size = val_results['targets'][0].size(0)
 batch_to_plot = torch.randint(0, batch_size, (how_many_plots,))
 
-for plot in range(how_many_plots - how_many_plots%2):
+for plot in range(how_many_plots):
     seq = sequence_to_plot[plot].item()
     batch = batch_to_plot[plot].item()
     for var in range(io_size):
     # Plotting the predictions
-        plt.subplot(how_many_plots // 2, 3, plot + 1)
+        plt.subplot(how_many_plots, io_size, io_size*plot + var + 1)
         plt.plot(val_results['inputs'][seq][batch,:,var].cpu(), label='Input')
         plt.plot(val_results['targets'][seq][batch,:,var].cpu(), label='Target')
         plt.plot(val_results['predictions'][seq][batch,:,var].cpu(), label='Predicted (Reservoir)')
@@ -133,7 +133,7 @@ plt.close()
 
 
 
-print("Predicting...")
+print("Generating...")
 # use the trained models to predict the validation data and compute the NRMSE
 # firstly load the data
 if diego:
@@ -144,9 +144,11 @@ data = torch.tensor(df[['x', 'y', 'z']].values).float()
 t = df['time'].values
 
 # split the data into warmup and test
-n = 100
-data_train, data_test = data[:n], data[n:n+100]
-t_train, t_test = t[:n], t[n:n+100]
+starting_point = torch.randint(0,data.size(0), (1,))
+n_input = 100
+n_pred = 50
+data_train, data_test = data[:n_input], data[n_input:n_input+n_pred]
+t_train, t_test = t[:n_input], t[n_input:n_input+n_pred]
 
 # unsqueeze the data
 data_train = data_train.unsqueeze(0)

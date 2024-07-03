@@ -1,11 +1,12 @@
 import torch
 import numpy as np
+from decimal import Decimal
 
 def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, val_dataloader, device, scheduler=None):
     train_losses = []
     val_best_loss = np.inf
     val_best_results = {'inputs':[], 'predictions':[], 'targets':[], 'losses':[]}
-    max_patience = 6
+    max_patience = 8
     patience = max_patience
 
     for epoch in range(num_epochs):
@@ -26,7 +27,6 @@ def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, v
             loss = criterion(outputs, targets)
             loss.backward()
             optimizer.step()
-            train_losses.append(loss.item())
             running_loss.append(loss.item())
 
         # Evaluate the model
@@ -51,11 +51,14 @@ def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, v
                 print("!!! BEST MODEL !!!")
 
         ## end of epoch  
+        # append losses
+        train_loss = np.mean(running_loss)
+        train_losses.append(train_loss)
         # show info
-        print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {np.mean(running_loss):.5f}, Validation loss: {val_mean_loss:.5f}')
+        print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {train_loss:.6f}, Validation loss: {val_mean_loss:.6f}')
         # scheduler
         if scheduler is not None:
-            print("Learning rate: %.5f" % scheduler.get_last_lr()[0])
+            print("Learning rate: %.2E" % Decimal(scheduler.get_last_lr()[0]))
             scheduler.step() 
         # patience  
         if patience == 0:
