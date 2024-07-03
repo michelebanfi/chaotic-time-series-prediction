@@ -31,12 +31,12 @@ def main():
     X_test1, y_test1 = x[n:], y[n:]
 
     units = 500
-    leak_rate = 0.3
-    spectral_radius = 1.25
+    leak_rate = 0.4865716163619631
+    spectral_radius = 1.367163082884632
     input_scaling = 1.0
     connectivity = 0.1
     input_connectivity = 0.2
-    regularization = 1e-8
+    regularization = 0.06277358548329898
 
     reservoir = Reservoir(units, input_scaling=input_scaling, sr=spectral_radius,
                       lr=leak_rate, rc_connectivity=connectivity,
@@ -94,12 +94,12 @@ def generation():
     X_test1, y_test1 = x[n:], y[n:]
 
     units = 500
-    leak_rate = 0.3
-    spectral_radius = 1.25
+    leak_rate = 0.4865716163619631
+    spectral_radius = 1.367163082884632
     input_scaling = 1.0
     connectivity = 0.1
     input_connectivity = 0.2
-    regularization = 1e-8
+    regularization = 0.06277358548329898
 
     reservoir = Reservoir(units, input_scaling=input_scaling, sr=spectral_radius,
                       lr=leak_rate, rc_connectivity=connectivity,
@@ -136,6 +136,7 @@ def generation():
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
+    plt.legend(['Generated', 'True'])
     plt.show()
 
 
