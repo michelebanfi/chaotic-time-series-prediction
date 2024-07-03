@@ -51,10 +51,12 @@ plt.title("x")
 for result in results:
     plt.plot(result[0, :, 0].cpu().detach().numpy())
 plt.grid()
+
 plt.subplot(2, 1, 2)
 plt.ylim(-0.1,0.1)
 plt.title("y")
 for result in results:
     plt.plot(result[0, :, 1].cpu().detach().numpy())
 plt.grid()
+
 plt.show()
