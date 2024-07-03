@@ -39,7 +39,7 @@ pred_len = 1
 input_len = 100
 
 # Define the model parameters
-io_size = 3
+io_size = 2
 num_epochs = 100
 
 ### LOAD DATA
@@ -147,9 +147,9 @@ print("Generating...")
 # use the trained models to predict the validation data and compute the NRMSE
 # firstly load the data
 if diego:
-    df = pd.read_csv("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/lorenz_data_test.csv")
+    df = pd.read_csv("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/3BP_test.csv")
 else:
-    df = pd.read_csv("Data/lorenz_data_test.csv")
+    df = pd.read_csv("Data/3BP_test.csv")
 data = torch.tensor(df[['x', 'y', 'z']].values).float()
 t = df['time'].values
 
