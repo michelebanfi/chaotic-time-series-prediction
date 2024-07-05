@@ -116,7 +116,7 @@ def generation():
 
     warming_inputs = X_test1[:seed_timesteps]
 
-    warming_out = esn.run(warming_inputs, reset=True)
+    warming_out = esn.run(warming_inputs, reset=False)
 
     nb_generations = 100
 
