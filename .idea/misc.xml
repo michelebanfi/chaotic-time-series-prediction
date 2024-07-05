@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="ai-models" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="ProgettoAi" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="ai-models" project-jdk-type="Python SDK" />
 </project>
