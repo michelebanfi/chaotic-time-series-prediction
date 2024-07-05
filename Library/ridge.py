@@ -14,13 +14,14 @@ torch.manual_seed(0)
 
 class ESNReservoir(nn.Module):
     def __init__(self, input_size, reservoir_size, output_size, pred_len, spectral_radius=0.90, sparsity=0.1,
-                 ridge_alpha=0.03):
+                 ridge_alpha=0.03, leaking_rate=1.0, connectivity=0.1):
         super(ESNReservoir, self).__init__()
         self.input_size = input_size
         self.reservoir_size = reservoir_size
         self.output_size = output_size
         self.pred_len = pred_len
         self.ridge_alpha = ridge_alpha
+        self.leaking_rate = leaking_rate
 
         # Input weights
         self.Win = nn.Parameter(torch.randn(reservoir_size, input_size) * 0.1, requires_grad=False)
@@ -28,7 +29,7 @@ class ESNReservoir(nn.Module):
         # Reservoir weights
         W = torch.randn(reservoir_size, reservoir_size)
 
-        # Apply sparsity
+        # Apply sparsity and connectivity
         mask = (torch.rand(reservoir_size, reservoir_size) < sparsity).float()
         W *= mask
 
@@ -36,6 +37,10 @@ class ESNReservoir(nn.Module):
         eigenvalues = torch.linalg.eigvals(W)
         max_eigenvalue = torch.max(torch.abs(eigenvalues))
         W *= spectral_radius / max_eigenvalue
+
+        # Apply connectivity
+        conn_mask = (torch.rand(reservoir_size, reservoir_size) < connectivity).float()
+        W *= conn_mask
 
         self.W = nn.Parameter(W, requires_grad=False)
 
@@ -52,7 +57,8 @@ class ESNReservoir(nn.Module):
         states = []
         for t in range(input_len):
             input = x[0, t, :].unsqueeze(0)
-            h = F.tanh(self.Win @ input.T + self.W @ h.T).T
+            h_new = F.tanh(self.Win @ input.T + self.W @ h.T).T
+            h = (1 - self.leaking_rate) * h + self.leaking_rate * h_new
             states.append(h)
 
         states = torch.cat(states, dim=0)
@@ -72,7 +78,8 @@ class ESNReservoir(nn.Module):
         with torch.no_grad():
             for t in range(input_len):
                 input = X[0, t, :].unsqueeze(0)
-                h = F.tanh(self.Win @ input.T + self.W @ h.T).T
+                h_new = F.tanh(self.Win @ input.T + self.W @ h.T).T
+                h = (1 - self.leaking_rate) * h + self.leaking_rate * h_new
                 states.append(h)
 
         states = torch.cat(states, dim=0).cpu().numpy()
@@ -82,8 +89,6 @@ class ESNReservoir(nn.Module):
         # Perform ridge regression
         ridge = Ridge(alpha=self.ridge_alpha)
         ridge.fit(states, y)
-        # lasso = Lasso(alpha=self.ridge_alpha)
-        # lasso.fit(states, y)
         self.Wout = torch.tensor(ridge.coef_, dtype=torch.float32).to(device)
         self.Wout_bias = torch.tensor(ridge.intercept_, dtype=torch.float32).to(device)
 
@@ -107,7 +112,7 @@ nb_generations = 300
 seed_timesteps = 300
 
 
-esn = ESNReservoir(input_size, reservoir_size, output_size, pred_len)
+esn = ESNReservoir(input_size, reservoir_size, output_size, pred_len, spectral_radius=0.9, sparsity=0.1, leaking_rate=0.3, connectivity=0.1, ridge_alpha=0.03)
 
 # X = lorenz(10000)
 
