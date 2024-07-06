@@ -146,4 +146,4 @@ def generation():
     plt.show()
 
 if __name__ == '__main__':
-    main()
+    generation()

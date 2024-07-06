@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from reservoirpy.datasets import lorenz
-from Library.Modules.ESNRidge import ESNReservoir
+from RidgeBasedExp.Modules.ESNRidge import ESNReservoir
+import pandas as pd
 
 # Function to visualize reservoir states
 def plot_reservoir_states(states):
@@ -17,30 +18,31 @@ def plot_reservoir_states(states):
     plt.show()
 
 # ESN params
-io_size = 3
-reservoir_size = 512
+io_size = 4
+reservoir_size = 500
 pred_len = 1
-spectral_radius = 0.9
+spectral_radius = 1.25
 sparsity = 0.1
-leaking_rate = 0.9
+leaking_rate = 0.3
 connectivity = 0.1
-ridge_alpha = 0.03
+ridge_alpha = 1e-8
 
 nb_generations = 100
-seed_timesteps = 500
+seed_timesteps = 100
 
 esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius, sparsity=sparsity,
                    leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)
 
-X = lorenz(10000)
+# X = lorenz(10000)
 
-# plot the data in 3D
+df = pd.read_csv("../../RestrictedThreeBodyProblem/Data/3BP_0.csv")
+X = df[['x', 'y', 'vx', 'vy']].values
+
+# plot the data in 2D
 fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.plot(X[:, 0], X[:, 1], X[:, 2])
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
+plt.plot(X[:, 0], X[:, 1])
+plt.xlabel('X')
+plt.ylabel('Y')
 plt.show()
 
 # scale the data
@@ -100,7 +102,6 @@ if pred_len == 1:
 
     X_t = X_test1[:, seed_timesteps: nb_generations + seed_timesteps]
 
-    # plot the 3 separate variables in 3 subplots
     fig, axs = plt.subplots(io_size, 1, figsize=(10, 10))
     for i in range(io_size):
         axs[i].plot(X_t[0, :, i].numpy(), label='True')
@@ -108,15 +109,16 @@ if pred_len == 1:
         axs[i].legend()
     plt.show()
 
-    # plot the data in 3D
+    # plot the data in 2D
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.plot(X_t[0, :, 0].numpy(), X_t[0, :, 1].numpy(), label='True')
-    ax.plot(X_gen[:, 0], X_gen[:, 1], label='Generated')
-    ax.plot(warming_inputs[0, :, 0], warming_inputs[0, :, 1], label='Warming')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
+    plt.plot(X_t[0, :, 0].numpy(), X_t[0, :, 1].numpy(), label='True')
+    plt.plot(X_gen[:, 0], X_gen[:, 1], label='Generated')
+    plt.plot(warming_inputs[0, :, 0].numpy(), warming_inputs[0, :, 1].numpy(), label='Warmup')
+    # plot the point where the lines end
+    plt.scatter(X_t[0, -1, 0].numpy(), X_t[0, -1, 1].numpy(), label='End True', color='red')
+    plt.scatter(X_gen[-1, 0], X_gen[-1, 1], label='End Generated', color='green')
+    plt.xlabel('X')
+    plt.ylabel('Y')
     plt.legend()
     plt.show()
 

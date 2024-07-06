@@ -6,7 +6,7 @@ import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import Ridge
 from reservoirpy.datasets import lorenz
-from Library.Modules.NVARRidge import NVARReservoir
+from RidgeBasedExp.Modules.NVARRidge import NVARReservoir
 
 torch.manual_seed(0)
 

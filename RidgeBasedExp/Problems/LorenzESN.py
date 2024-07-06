@@ -4,9 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from reservoirpy.datasets import lorenz
-from Library.Modules.ESNRidge import ESNReservoir
-from Library.Modules.NVARRidge import NVARReservoir
-import pandas as pd
+from RidgeBasedExp.Modules.ESNRidge import ESNReservoir
 
 # Function to visualize reservoir states
 def plot_reservoir_states(states):
@@ -19,26 +17,30 @@ def plot_reservoir_states(states):
     plt.show()
 
 # ESN params
-io_size = 2
-degree = 2
-ridge_alpha = 0.1
+io_size = 3
+reservoir_size = 512
 pred_len = 1
+spectral_radius = 0.9
+sparsity = 0.1
+leaking_rate = 0.9
+connectivity = 0.1
+ridge_alpha = 0.03
 
 nb_generations = 100
 seed_timesteps = 500
 
-nvar = NVARReservoir(io_size, degree, ridge_alpha)
+esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius, sparsity=sparsity,
+                   leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)
 
-# X = lorenz(10000)
+X = lorenz(10000)
 
-df = pd.read_csv("../../RestrictedThreeBodyProblem/Data/3BP_1.csv")
-X = df[['x', 'y',]].values
-
-# plot the data in 2D
+# plot the data in 3D
 fig = plt.figure()
-plt.plot(X[:, 0], X[:, 1])
-plt.xlabel('X')
-plt.ylabel('Y')
+ax = fig.add_subplot(111, projection='3d')
+ax.plot(X[:, 0], X[:, 1], X[:, 2])
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
 plt.show()
 
 # scale the data
@@ -55,8 +57,8 @@ X = X[:, :-pred_len, :]
 X_train1, y_train1 = X[:, :n, :], y[:, :n, :]
 X_test1, y_test1 = X[:, n:, :], y[:, n:, :]
 
-nvar.fit(X_train1, y_train1)
-output = nvar(X_test1)
+esn.fit(X_train1, y_train1)
+output, _ = esn(X_test1)
 
 # calculate the RMSE
 rmse = torch.sqrt(torch.mean((output - y_test1) ** 2))
@@ -77,7 +79,7 @@ for i in range(io_size):
 plt.show()
 
 # After fitting the model. Lol _Wout Van Aert_ is a Belgian cyclist
-print("Wout shape:", nvar.Wout.shape)
+print("Wout shape:", esn.Wout.shape)
 
 # the generation can be performed only for pred_len = 1.
 # This is because the model is trained to predict only one step ahead
@@ -85,13 +87,13 @@ if pred_len == 1:
 
     # Continue with the generation function, starting with a warmup phase
     warming_inputs = X_test1[:, :seed_timesteps, :]
-    warming_out = nvar(warming_inputs)
+    _, h = esn(warming_inputs)
 
     X_gen = np.zeros((nb_generations, io_size))
     y = warming_inputs[:, -1, :].detach().numpy()
     for t in range(nb_generations):
         input = torch.tensor(y, dtype=torch.float32).unsqueeze(0)
-        output = nvar(input)
+        output, h = esn(input, h)
         y = output[:, 0, :]
         z = output[0, 0, :].detach().numpy()
         X_gen[t] = z
@@ -106,13 +108,15 @@ if pred_len == 1:
         axs[i].legend()
     plt.show()
 
-    # plot the data in 2D
+    # plot the data in 3D
     fig = plt.figure()
-    plt.plot(X_t[0, :, 0].numpy(), X_t[0, :, 1].numpy(), label='True')
-    plt.plot(X_gen[:, 0], X_gen[:, 1], label='Generated')
-    plt.plot(warming_inputs[0, :, 0].numpy(), warming_inputs[0, :, 1].numpy(), label='Warmup')
-    plt.xlabel('X')
-    plt.ylabel('Y')
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot(X_t[0, :, 0].numpy(), X_t[0, :, 1].numpy(), label='True')
+    ax.plot(X_gen[:, 0], X_gen[:, 1], label='Generated')
+    ax.plot(warming_inputs[0, :, 0], warming_inputs[0, :, 1], label='Warming')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
     plt.legend()
     plt.show()
 

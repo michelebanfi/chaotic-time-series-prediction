@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from reservoirpy.datasets import lorenz
-from Library.Modules.ESNRidge import ESNReservoir
+from RidgeBasedExp.Modules.ESNRidge import ESNReservoir
+from RidgeBasedExp.Modules.NVARRidge import NVARReservoir
 import pandas as pd
 
 # Function to visualize reservoir states
@@ -19,19 +20,14 @@ def plot_reservoir_states(states):
 
 # ESN params
 io_size = 2
-reservoir_size = 512
+degree = 2
+ridge_alpha = 0.1
 pred_len = 1
-spectral_radius = 0.9
-sparsity = 0.1
-leaking_rate = 0.9
-connectivity = 0.1
-ridge_alpha = 0.03
 
 nb_generations = 100
 seed_timesteps = 500
 
-esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius, sparsity=sparsity,
-                   leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)
+nvar = NVARReservoir(io_size, degree, ridge_alpha)
 
 # X = lorenz(10000)
 
@@ -59,8 +55,8 @@ X = X[:, :-pred_len, :]
 X_train1, y_train1 = X[:, :n, :], y[:, :n, :]
 X_test1, y_test1 = X[:, n:, :], y[:, n:, :]
 
-esn.fit(X_train1, y_train1)
-output, _ = esn(X_test1)
+nvar.fit(X_train1, y_train1)
+output = nvar(X_test1)
 
 # calculate the RMSE
 rmse = torch.sqrt(torch.mean((output - y_test1) ** 2))
@@ -81,7 +77,7 @@ for i in range(io_size):
 plt.show()
 
 # After fitting the model. Lol _Wout Van Aert_ is a Belgian cyclist
-print("Wout shape:", esn.Wout.shape)
+print("Wout shape:", nvar.Wout.shape)
 
 # the generation can be performed only for pred_len = 1.
 # This is because the model is trained to predict only one step ahead
@@ -89,13 +85,13 @@ if pred_len == 1:
 
     # Continue with the generation function, starting with a warmup phase
     warming_inputs = X_test1[:, :seed_timesteps, :]
-    _, h = esn(warming_inputs)
+    warming_out = nvar(warming_inputs)
 
     X_gen = np.zeros((nb_generations, io_size))
     y = warming_inputs[:, -1, :].detach().numpy()
     for t in range(nb_generations):
         input = torch.tensor(y, dtype=torch.float32).unsqueeze(0)
-        output, h = esn(input, h)
+        output = nvar(input)
         y = output[:, 0, :]
         z = output[0, 0, :].detach().numpy()
         X_gen[t] = z
