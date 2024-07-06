@@ -30,7 +30,7 @@ def main():
     plt.show()
     plt.close()
 
-    x, y = to_forecasting(X, forecast=4)
+    x, y = to_forecasting(X, forecast=1)
     X_train1, y_train1 = x[:n], y[:n]
     X_test1, y_test1 = x[n:], y[n:]
 
@@ -99,7 +99,7 @@ def generation():
     X_train1, y_train1 = x[:n], y[:n]
     X_test1, y_test1 = x[n:], y[n:]
 
-    units = 1000
+    units = 500
     leak_rate = 0.3
     spectral_radius = 1.25
     input_scaling = 1.0
@@ -146,4 +146,4 @@ def generation():
     plt.show()
 
 if __name__ == '__main__':
-    generation()
+    main()
