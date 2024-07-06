@@ -1,1 +1,0 @@
-{"exp": "hyperopt-lorenz", "hp_max_evals": 200, "hp_method": "random", "seed": 42, "instances_per_trial": 5, "hp_space": {"N": ["quniform", [400, 600, 1]], "sr": ["choice", 1.367163082884632], "lr": ["choice", 0.4865716163619631], "input_scaling": ["choice", 1.0], "ridge": ["choice", 0.06277358548329898], "seed": ["choice", 1234]}}

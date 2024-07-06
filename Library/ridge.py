@@ -40,7 +40,7 @@ class ESNReservoir(nn.Module):
         input_len = x.size(1)
 
         states = []
-        for t in range(input_len):
+        for t in range(self.pred_len):
             input = x[0, t, :].unsqueeze(0)
             h = F.leaky_relu(self.Win @ input.T + self.W @ h.T).T
             states.append(h)
@@ -77,7 +77,6 @@ class ESNReservoir(nn.Module):
         self.Wout = torch.tensor(ridge.coef_, dtype=torch.float32).to(device)
         self.Wout_bias = torch.tensor(ridge.intercept_, dtype=torch.float32).to(device)
 
-
 # Function to visualize reservoir states
 def plot_reservoir_states(states):
     states = states.cpu().detach().numpy()
@@ -93,7 +92,7 @@ input_size = 3
 reservoir_size = 512
 output_size = 3
 pred_len = 1
-nb_generations = 10
+nb_generations = 100
 
 esn = ESNReservoir(input_size, reservoir_size, output_size, pred_len)
 
@@ -175,8 +174,8 @@ X_t = X_test1[:, seed_timesteps: nb_generations + seed_timesteps]
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.plot(X_gen[:, 0], X_gen[:, 1], X_gen[:, 2], 'r')
-#ax.plot(X_t[:, :, 0], X_t[:, :, 1], X_t[:, :, 2], 'b')
-#ax.plot(warming_inputs[:, :, 0], warming_inputs[:, :, 1], warming_inputs[:, :, 2], 'g')
+ax.plot(X_t[:, :, 0], X_t[:, :, 1], X_t[:, :, 2], 'b')
+ax.plot(warming_inputs[:, :, 0], warming_inputs[:, :, 1], warming_inputs[:, :, 2], 'g')
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
