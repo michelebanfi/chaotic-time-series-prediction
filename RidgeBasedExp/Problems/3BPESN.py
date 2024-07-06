@@ -19,13 +19,13 @@ def plot_reservoir_states(states):
 
 # ESN params
 io_size = 4
-reservoir_size = 500
+reservoir_size = 1000
 pred_len = 1
-spectral_radius = 1.25
-sparsity = 0.1
+spectral_radius = 0.9
+sparsity = 0.05
 leaking_rate = 0.3
-connectivity = 0.1
-ridge_alpha = 1e-8
+connectivity = 0.2
+ridge_alpha = 1e-4
 
 nb_generations = 100
 seed_timesteps = 100
@@ -39,11 +39,11 @@ df = pd.read_csv("../../RestrictedThreeBodyProblem/Data/3BP_0.csv")
 X = df[['x', 'y', 'vx', 'vy']].values
 
 # plot the data in 2D
-fig = plt.figure()
-plt.plot(X[:, 0], X[:, 1])
-plt.xlabel('X')
-plt.ylabel('Y')
-plt.show()
+# fig = plt.figure()
+# plt.plot(X[:, 0], X[:, 1])
+# plt.xlabel('X')
+# plt.ylabel('Y')
+# plt.show()
 
 # scale the data
 X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)

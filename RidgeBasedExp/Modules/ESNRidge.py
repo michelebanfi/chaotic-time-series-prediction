@@ -7,17 +7,17 @@ from sklearn.linear_model import Ridge, Lasso
 torch.manual_seed(0)
 
 class ESNReservoir(nn.Module):
-    def __init__(self, input_size, reservoir_size, pred_len, spectral_radius=0.90, sparsity=0.1,
+    def __init__(self, io_size, reservoir_size, pred_len, spectral_radius=0.90, sparsity=0.1,
                  ridge_alpha=0.03, leaking_rate=1.0, connectivity=0.1):
         super(ESNReservoir, self).__init__()
-        self.input_size = input_size
+        self.io_size = io_size
         self.reservoir_size = reservoir_size
         self.pred_len = pred_len
         self.ridge_alpha = ridge_alpha
         self.leaking_rate = leaking_rate
 
         # Input weights
-        self.Win = nn.Parameter(torch.randn(reservoir_size, input_size) * 0.1, requires_grad=False)
+        self.Win = nn.Parameter(torch.randn(reservoir_size, io_size) * 0.1, requires_grad=False)
 
         # Reservoir weights
         W = torch.randn(reservoir_size, reservoir_size)
@@ -58,7 +58,7 @@ class ESNReservoir(nn.Module):
         if self.Wout is not None:
             outputs = torch.matmul(states, self.Wout.T) + self.Wout_bias
         else:
-            outputs = torch.zeros(states.size(0), self.input_size).to(device)
+            outputs = torch.zeros(states.size(0), self.io_size).to(device)
 
         return outputs.unsqueeze(0), h
 
