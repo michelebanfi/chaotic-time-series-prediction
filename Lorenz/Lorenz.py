@@ -72,6 +72,11 @@ start = time.time()
 # Train the model
 val_results, train_losses = (
     evaluate(num_epochs, criterion, optimizer, model, train_dataloader, val_dataloader, device, scheduler))
+# save model
+if diego:
+    torch.save(val_results['model'].state_dict(), "D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Models/best_model.pth")
+else:
+    torch.save(val_results['model'].state_dict(), "Models/best_model.pth")
 # stop counting the time
 end = time.time()
 print('Time elapsed: ', end - start, "s")
@@ -92,6 +97,11 @@ start = time.time()
 # Train the benchmark model
 val_results_benchmark, train_losses_benchmark = (
     evaluate(num_epochs, criterion, optimizer, modelBenchmark, train_dataloader, val_dataloader, device, scheduler))
+# save model
+if diego:
+    torch.save(val_results_benchmark['model'].state_dict(), "D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Models/best_model_benchmark.pth")
+else:
+    torch.save(val_results_benchmark['model'].state_dict(), "Models/best_model_benchmark.pth")
 # stop counting the time
 end = time.time()
 print('Time elapsed: ', end - start, "s")

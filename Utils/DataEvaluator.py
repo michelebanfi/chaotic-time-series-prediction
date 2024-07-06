@@ -46,6 +46,8 @@ def evaluate(num_epochs, criterion, optimizer, currentModel, train_dataloader, v
                 # save best model results
                 val_best_loss = val_mean_loss
                 val_best_results = val_results 
+                # save model
+                val_best_results['model'] = currentModel
                 # restore patience
                 patience = max_patience
                 print("!!! BEST MODEL !!!")

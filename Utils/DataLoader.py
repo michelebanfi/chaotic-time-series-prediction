@@ -23,7 +23,7 @@ def loadData(pred_len, input_len, train_batch_size=1, val_batch_size=1, file="3B
 
     for i in range(0, num_files):
         if diego:
-            df = pd.read_csv(f"D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Data/{file}_{i}.csv")
+            df = pd.read_csv(f"D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/{file}_{i}.csv")
         else:
             df = pd.read_csv(f"Data/{file}_{i}.csv")
 
