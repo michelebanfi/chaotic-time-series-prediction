@@ -29,7 +29,7 @@ pred_len = 1
 nb_generations = 100
 seed_timesteps = 100
 
-nvar = NVARReservoir(io_size, degree, ridge_alpha)
+nvar = NVARReservoir(io_size, degree, ridge_alpha, stride=1, delay=1)
 
 timesteps = 10000
 
