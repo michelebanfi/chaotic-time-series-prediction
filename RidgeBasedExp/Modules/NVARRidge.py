@@ -6,9 +6,9 @@ torch.manual_seed(0)
 
 
 class NVARReservoir(nn.Module):
-    def __init__(self, input_size, degree=2, ridge_alpha=0.0, delay=1, stride=1):
+    def __init__(self, io_size, degree=2, ridge_alpha=0.0, delay=1, stride=1):
         super(NVARReservoir, self).__init__()
-        self.input_size = input_size
+        self.input_size = io_size
         self.degree = degree
         self.ridge_alpha = ridge_alpha
         self.delay = delay

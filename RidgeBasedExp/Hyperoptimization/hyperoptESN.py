@@ -121,6 +121,7 @@ print('Best hyperparameters:', best_hyperparams)
 print('RMSE:', best_result['rmse'])
 print('R^2:', best_result['r2'])
 
+# Best result found during computation:
 # Best hyperparameters: {'reservoir_size': 200, 'spectral_radius': 1.1, 'sparsity': 0.15, 'leaking_rate': 0.1, 'connectivity': 0.1, 'ridge_alpha': 1e-06, 'pred_len': 1}
 # RMSE: 0.03342189314935667
 # R^2: 0.9970140478425422
