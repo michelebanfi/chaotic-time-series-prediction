@@ -19,7 +19,7 @@ def plot_reservoir_states(states):
 
 # ESN params
 io_size = 4
-reservoir_size = 1000
+reservoir_size = 2048
 pred_len = 1
 spectral_radius = 0.9
 sparsity = 0.05
