@@ -19,7 +19,7 @@ def plot_reservoir_states(states):
 
 # ESN params
 io_size = 4
-reservoir_size = 1000
+reservoir_size = 2048
 pred_len = 1
 spectral_radius = 0.9
 sparsity = 0.05
@@ -37,6 +37,7 @@ esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_r
 
 df = pd.read_csv("../../RestrictedThreeBodyProblem/Data/3BP_0.csv")
 X = df[['x', 'y', 'vx', 'vy']].values
+X = X[::50]
 
 # plot the data in 2D
 # fig = plt.figure()
