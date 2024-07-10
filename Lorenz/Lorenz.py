@@ -35,7 +35,7 @@ print("Working on:", device)
 print(30*"-")
 
 # Define sequences length
-pred_len = 1
+pred_len = 3
 input_len = 100
 
 # Define the model parameters
@@ -45,7 +45,7 @@ num_epochs = 100
 ### LOAD DATA
 # Load the data
 print("Loading data...")
-train_t, train_dataloader, val_t, val_dataloader = loadData(pred_len, input_len, file="lorenz", train_samples=200, val_samples=20)
+train_t, train_dataloader, val_t, val_dataloader = loadData(pred_len, input_len, file="lorenz", train_samples=300, val_samples=20, sampling_rate=50)
 print("Train batches:", len(train_dataloader))
 print("Train input sequences:", len(train_dataloader.dataset))
 print("Validation batches:", len(val_dataloader))
@@ -54,8 +54,8 @@ print(30*"-")
 
 
 # init the models
-model = ESNReservoir(io_size, 2048, io_size, pred_len=pred_len).to(device)
-modelBenchmark = GRU(io_size, 512, io_size, pred_len=pred_len, num_layers=1).to(device)
+model = ESNReservoir(io_size, 4096, io_size, pred_len=pred_len).to(device)
+modelBenchmark = GRU(io_size, 1024, io_size, pred_len=pred_len, num_layers=1).to(device)
 
 
 ### RESERVOIR
@@ -63,9 +63,9 @@ modelBenchmark = GRU(io_size, 512, io_size, pred_len=pred_len, num_layers=1).to(
 # criterion
 criterion = NormalizedMeanSquaredError
 # optimizer
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.0001)
 # scheduler
-scheduler = StepLR(optimizer, step_size=4, gamma=0.45)
+scheduler = StepLR(optimizer, step_size=1, gamma=0.75)
 print("Reservoir training...")
 # start counting the time
 start = time.time()
@@ -91,7 +91,7 @@ criterion = NormalizedMeanSquaredError
 # optimizer
 optimizer = optim.Adam(modelBenchmark.parameters(), lr=0.001)
 # scheduler
-scheduler = StepLR(optimizer, step_size=4, gamma=0.45)
+scheduler = StepLR(optimizer, step_size=1, gamma=0.75)
 # start counting the time
 start = time.time()
 # Train the benchmark model
@@ -147,9 +147,9 @@ print("Generating...")
 # use the trained models to predict the validation data and compute the NRMSE
 # firstly load the data
 if diego:
-    df = pd.read_csv("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Data/lorenz_data_test.csv")
+    df = pd.read_csv("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Data/lorenz_test.csv")
 else:
-    df = pd.read_csv("Data/lorenz_data_test.csv")
+    df = pd.read_csv("Data/lorenz_test.csv")
 data = torch.tensor(df[['x', 'y', 'z']].values).float()
 t = df['time'].values
 
@@ -172,8 +172,8 @@ outputs_benchmark = modelBenchmark(data_train.to(device))
 
 # plot the 3 variables separated
 plt.figure(figsize=(15, 15))
-for i in range(3):
-    plt.subplot(3, 1, i+1)
+for i in range(io_size):
+    plt.subplot(io_size, 1, i+1)
     plt.plot(t_train, data_train[0, :, i].cpu(), label='Train')
     plt.plot(t_test, data_test[:, i].cpu(), label='Test')
     plt.plot(t_test, outputs[0, :, i].cpu().detach(), label='Predicted (Reservoir)')

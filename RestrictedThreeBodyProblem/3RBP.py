@@ -36,16 +36,16 @@ print(30*"-")
 
 # Define sequences length
 pred_len = 1
-input_len = 100
+input_len = 10
 
 # Define the model parameters
 io_size = 2
-num_epochs = 100
+num_epochs = 2
 
 ### LOAD DATA
 # Load the data
 print("Loading data...")
-train_t, train_dataloader, val_t, val_dataloader = loadData(pred_len, input_len, file="3BP", train_samples=200, val_samples=20)
+train_t, train_dataloader, val_t, val_dataloader = loadData(pred_len, input_len, file="3BP", train_samples=10, val_samples=10, sampling_rate=10)
 print("Train batches:", len(train_dataloader))
 print("Train input sequences:", len(train_dataloader.dataset))
 print("Validation batches:", len(val_dataloader))
@@ -54,7 +54,7 @@ print(30*"-")
 
 
 # init the models
-model = ESNReservoir(io_size, 2048, io_size, pred_len=pred_len).to(device)
+model = ESNReservoir(io_size, 1024, io_size, pred_len=pred_len).to(device)
 modelBenchmark = GRU(io_size, 512, io_size, pred_len=pred_len, num_layers=1).to(device)
 
 
@@ -150,7 +150,7 @@ if diego:
     df = pd.read_csv("D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/3BP_test.csv")
 else:
     df = pd.read_csv("Data/3BP_test.csv")
-data = torch.tensor(df[['x', 'y', 'z']].values).float()
+data = torch.tensor(df[['x', 'y']].values).float()
 t = df['time'].values
 
 # split the data into warmup and test
@@ -172,8 +172,8 @@ outputs_benchmark = modelBenchmark(data_train.to(device))
 
 # plot the 3 variables separated
 plt.figure(figsize=(15, 15))
-for i in range(3):
-    plt.subplot(3, 1, i+1)
+for i in range(io_size):
+    plt.subplot(io_size, 1, i+1)
     plt.plot(t_train, data_train[0, :, i].cpu(), label='Train')
     plt.plot(t_test, data_test[:, i].cpu(), label='Test')
     plt.plot(t_test, outputs[0, :, i].cpu().detach(), label='Predicted (Reservoir)')
@@ -184,7 +184,7 @@ for i in range(3):
     plt.grid()
 plt.tight_layout()
 if diego:
-    plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Media/lorenz_generations.png')
+    plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Media/r3bp_generations.png')
 else:
     plt.savefig('Media/lorenz_generations.png')
 plt.close()

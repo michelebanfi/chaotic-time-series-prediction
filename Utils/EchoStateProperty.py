@@ -37,8 +37,8 @@ warmup = df[starting_point:starting_point+in_len]
 input = torch.tensor(warmup.values).float().unsqueeze(0).to(device)
 
 results = []
-for i in range(5):
-    model = ESNReservoir(2, 4096, 2, pred_len=out_len).to(device)
+for i in range(3):
+    model = ESNReservoir(2, 2048, 2, pred_len=out_len).to(device)
     model.eval()
     result = model(input)
     results.append(result)

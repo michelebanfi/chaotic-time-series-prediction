@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 # Define the parameters for data generation
 t_span = (0, int(1e3))
 t_eval = np.linspace(t_span[0], t_span[1], int(1e8))
-y0 = [95, 0, 4.5, 5.5]
+y0 = [95.0,0.0,4.5,5.5]
 
 # read constants
 if diego:
@@ -32,7 +32,7 @@ y2 = constants['y'][1]
 # Generate the data
 t, data = generate_data(restricted_three_body, t_span, y0, t_eval, args=(m1, m2, x1, y1, x2, y2))
 
-sampling = int(1e4)
+sampling = int(1e2)
 
 # sample the data every ... points
 t = t[::sampling]
@@ -50,7 +50,7 @@ df['time'] = t
 if diego:
     df.to_csv('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/3BP_test.csv', index=False)
 else:
-    df.to_csv("Data/3BP_test.csv", index = False)
+    df.to_csv("Data/3BP_sdvsdv.csv", index = False)
 
 plt.figure(figsize=(10, 6))
 plt.plot(data[:, 0], data[:, 1], label='Trajectory of the third body')
@@ -63,22 +63,22 @@ plt.legend()
 plt.title('Restricted Three-Body Problem')
 plt.grid()
 if diego:
-    plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Media/3BP_test.png')
+    plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Media/3BP.png')
 else:
     plt.savefig("Media/3BP.png")
 plt.close()
 
 
 # plot only the orbit
-plt.figure(figsize=(10, 6))
-plt.plot(data[:, 0], data[:, 1], label='Trajectory of the third body')
-plt.xlabel('x')
-plt.ylabel('y')
-plt.legend()
-plt.title('Restricted Three-Body Problem')
-plt.grid()
-if diego:
-    plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Media/3BP_orbit_test.png')
-else:
-    plt.savefig("Media/3BP_orbit.png")
-plt.close()
+#plt.figure(figsize=(10, 6))
+#plt.plot(data[:, 0], data[:, 1], label='Trajectory of the third body')
+#plt.xlabel('x')
+#plt.ylabel('y')
+#plt.legend()
+#plt.title('Restricted Three-Body Problem')
+#plt.grid()
+#if diego:
+#    plt.savefig('D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Media/3BP_orbit_test.png')
+#else:
+#    plt.savefig("Media/3BP_orbit.png")
+#plt.close()

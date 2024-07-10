@@ -5,8 +5,8 @@ import torch
 diego = True
 
 # load data function
-def loadData(pred_len, input_len, train_batch_size=1, val_batch_size=1, file="3BP", train_samples=100, val_samples=100):
-    num_files = 3
+def loadData(pred_len, input_len, train_batch_size=1, val_batch_size=1, file="3BP", train_samples=100, val_samples=100, sampling_rate=10):
+    num_files = 10
     
     if file == "3BP":
         variables = ['x', 'y']
@@ -23,12 +23,15 @@ def loadData(pred_len, input_len, train_batch_size=1, val_batch_size=1, file="3B
 
     for i in range(0, num_files):
         if diego:
-            df = pd.read_csv(f"D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/RestrictedThreeBodyProblem/Data/{file}_{i}.csv")
+            df = pd.read_csv(f"D:/File_vari/Scuola/Universita/Bicocca/Magistrale/AI4ST/23-24/II_semester/AIModels/3_Body_Problem/Lorenz/Data/{file}_{i}.csv")
         else:
             df = pd.read_csv(f"Data/{file}_{i}.csv")
 
         data = torch.tensor(df[variables].values)
         t = df['time'].values
+
+        data = data[::sampling_rate]
+        t = t[::sampling_rate]
 
         # Split the data into training and validation sets
         train_data, val_data = train_test_split(data, test_size=0.2, shuffle=False)
