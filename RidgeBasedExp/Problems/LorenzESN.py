@@ -26,13 +26,17 @@ leaking_rate = 0.9
 connectivity = 0.1
 ridge_alpha = 0.03
 
-nb_generations = 100
-seed_timesteps = 500
+nb_generations = 50
+seed_timesteps = 100
 
 esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius, sparsity=sparsity,
                    leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)
 
-X = lorenz(10000)
+# X = lorenz(10000)
+
+X = pd.read_csv("../../Lorenz/Data/lorenz_0.csv")
+X = X[['x', 'y', 'z']].values
+X = X[::50]
 
 # plot the data in 3D
 fig = plt.figure()

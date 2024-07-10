@@ -37,6 +37,7 @@ esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_r
 
 df = pd.read_csv("../../RestrictedThreeBodyProblem/Data/3BP_0.csv")
 X = df[['x', 'y', 'vx', 'vy']].values
+X = X[::50]
 
 # plot the data in 2D
 # fig = plt.figure()
