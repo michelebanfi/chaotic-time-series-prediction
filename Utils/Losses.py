@@ -12,13 +12,13 @@ def NormalizedMeanSquaredError(y_pred, y_true):
     nmse = squared_dist / true_squared_norm
     # actual (from above) shape: (batch size, prediction length)
     # WEIGHTED
-    base = torch.tensor(1, dtype=torch.float32)
-    weights = base.pow(-torch.arange(start=1,end=pred_len+1,step=1)).to(device)
-    weights = weights/weights.sum()
-    aggregated_nmse = torch.zeros(batch_size)
-    for batch in range(batch_size):
-        aggregated_nmse[batch] = torch.dot(nmse[batch], weights)
+    #base = torch.tensor(1, dtype=torch.float32)
+    #weights = base.pow(-torch.arange(start=1,end=pred_len+1,step=1)).to(device)
+    #weights = weights/weights.sum()
+    #aggregated_nmse = torch.zeros(batch_size)
+    #for batch in range(batch_size):
+    #    aggregated_nmse[batch] = torch.dot(nmse[batch], weights)
     # UNWEIGHTED
-    # aggregated_nmse = torch.mean(torch.mean(nmse, dim=1), dim=0) 
+    aggregated_nmse = torch.mean(torch.mean(nmse, dim=1), dim=0) 
     aggregated_nmse = torch.mean(aggregated_nmse, dim=0)
     return aggregated_nmse
