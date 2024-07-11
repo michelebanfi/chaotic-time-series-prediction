@@ -2,10 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.decomposition import PCA
+from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 
 class ESNPCA(nn.Module):
-    def __init__(self, input_size, reservoir_size, output_size, components=5,spectral_radius=0.9, sparsity=0.1, warmup=100, leaking_rate=0.01):
+    def __init__(self, input_size, reservoir_size, output_size, components=5, spectral_radius=0.9, sparsity=0.5, warmup=100, leaking_rate=0.1):
         super(ESNPCA, self).__init__()
         self.input_size = input_size
         self.reservoir_size = reservoir_size
@@ -25,7 +26,7 @@ class ESNPCA(nn.Module):
         mask = (torch.rand(reservoir_size, reservoir_size) < sparsity).float()
         self.Wh.data *= mask
 
-        ## TRAINABLE OUTPUT
+        ## TRAINABLE STUFFS
         ## PCA
         if isinstance(components, int):
             self.ncomp = components
@@ -34,58 +35,81 @@ class ESNPCA(nn.Module):
         else:
             self.ncomp = 5
         self.pca = PCA(self.ncomp)
-        # Output weights
-        self.Wout = nn.Linear(self.ncomp, output_size)
+        self.linreg = LinearRegression()
+        self.scaler = StandardScaler()
 
-
+    def reservoir(self, input, h):
+        # input: (1, input_size)
+        # h: (1, reservoir_size)
+        h_new = F.tanh(self.Win @ input + self.Wh @ h)
+        h = self.leaking_rate * h + (1-self.leaking_rate) * h_new
+        return h
 
     def forward(self, x):
         
         device = x.device  
         input_len = x.size(0)
 
-        H = torch.zeros(size=(input_len - self.warmup, self.reservoir_size + self.input_size)).to(device)
+        H = torch.zeros(size=(input_len, self.reservoir_size + self.input_size)).to(device)
         h = torch.zeros(self.reservoir_size).to(device)
 
         for t in range(input_len):
             # take single point
             input = x[t,:]
             # get hidden state from the point extracted and the previous hidden state
-            h_new = F.tanh(self.Win @ input + self.Wh @ h)
-            h = (1 - self.leaking_rate) * h + self.leaking_rate * h_new
-            if t >= self.warmup:
-                ext_state = torch.cat((h,input))
-                H[t-self.warmup,:] = ext_state
-                    
+            h = self.reservoir(input, h)
+            #if t >= self.warmup:
+                #ext_state = torch.cat((h,input))
+                #H[t-self.warmup,:] = ext_state  
+            ext_state = torch.cat((h,input))
+            H[t,:] = ext_state       
 
         return H
 
-    def fit(self, input):
+    def fit(self, input, target):
         # get reservoir states
-        reservoir_states = self.forward(input[:-1])
+        reservoir_states = self.forward(input)
         device = reservoir_states.device
-        # scaler
-        scaler = StandardScaler()
-        reservoir_states = scaler.fit_transform(reservoir_states.cpu().numpy())
+        # scaler of the H tensor
+        reservoir_states = self.scaler.fit_transform(reservoir_states.cpu().numpy())
         # dimensionality reduction
-        reduced_states = torch.tensor(self.pca.fit_transform(reservoir_states)).to(device).float()
-        print(f"Components: {self.ncomp}", f"- Explained variance: {100*self.pca.explained_variance_ratio_.sum():.1f} %")
+        reservoir_states = torch.tensor(self.pca.fit_transform(reservoir_states)).to(device).float()
         # pseudo inverse of last hidden states (the one of the predictions)
-        pinv = torch.pinverse(reduced_states)
-        # the input is the target if shifted by 1 (and the warmup)
-        target = input[self.warmup+1:]
-        self.Wout.data = (pinv @ target).T
+        linreg = self.linreg.fit(reservoir_states.cpu(), target.cpu())
+        self.Wout = torch.tensor(linreg.coef_).to(device).float()
+        self.bias = torch.tensor(linreg.intercept_).to(device).float()
+        # output
+        output = reservoir_states @ self.Wout.T + self.bias
+        return output
 
         
-    def predict(self, input):
-        reservoir_states = self.forward(input[:-1])
+    def predict(self, input, reservoir_states=None):
+        if reservoir_states is None:
+            reservoir_states = self.forward(input)
         device = reservoir_states.device
-        # scaler
-        scaler = StandardScaler()
-        reservoir_states = scaler.fit_transform(reservoir_states.cpu().numpy())
+        # scale the states (it has been fitted before)
+        reservoir_states_transformed = self.scaler.transform(reservoir_states.cpu().numpy())
         # dimensionality reduction
-        reduced_states = torch.tensor(self.pca.transform(reservoir_states)).to(device).float()
+        reservoir_states_transformed = self.pca.transform(reservoir_states_transformed)
+        reservoir_states_transformed = torch.tensor(reservoir_states_transformed).to(device).float()
+        # get last hidden state to predict the new point -> size = (1, ncomp))
+        h = reservoir_states_transformed[-1]
         # calculate outputs
-        output = reduced_states @ self.Wout.data.T
+        output = h @ self.Wout.T + self.bias
+        output = output.squeeze(0)
+        # calculate the hidden state of this new prediction using the original hidden state
+        h = self.reservoir(output, reservoir_states[-1, :-self.input_size])
 
-        return output
+        return output, h
+    
+    def generate(self, input, pred_len):
+        device = input.device
+        outputs = torch.zeros(size=(pred_len, self.output_size)).to(device)
+        ext_state, h = None, None
+        x = input
+        for t in range(pred_len):
+            if h is not None:
+                ext_state = torch.cat((h,x)).unsqueeze(0)
+            x, h = self.predict(x, ext_state)
+            outputs[t,:]=x
+        return outputs
