@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from reservoirpy.datasets import lorenz
-from RidgeBasedExp.Modules.ESNRidge import ESNReservoir
+from Reservoirs.ESNRidge import ESNReservoir
 import pandas as pd
 
 # Function to visualize reservoir states
@@ -35,7 +35,7 @@ esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_r
 
 # X = lorenz(10000)
 
-df = pd.read_csv("../../RestrictedThreeBodyProblem/Data/3BP_0.csv")
+df = pd.read_csv("../Data/R3BP/3BP_0.csv")
 X = df[['x', 'y', 'vx', 'vy']].values
 X = X[::50]
 

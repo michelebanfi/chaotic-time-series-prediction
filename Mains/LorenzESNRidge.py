@@ -3,8 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from reservoirpy.datasets import lorenz
-from RidgeBasedExp.Modules.ESNRidge import ESNReservoir
+from Reservoirs.ESNRidge import ESNReservoir
 
 # Function to visualize reservoir states
 def plot_reservoir_states(states):
@@ -32,9 +31,7 @@ seed_timesteps = 100
 esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius, sparsity=sparsity,
                    leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)
 
-# X = lorenz(10000)
-
-X = pd.read_csv("../../Lorenz/Data/lorenz_0.csv")
+X = pd.read_csv("../Data/Lorenz/lorenz_0.csv")
 X = X[['x', 'y', 'z']].values
 X = X[::20]
 
