@@ -99,6 +99,18 @@ def loadData(dataset="R3BP", version="0", device=torch.device("cuda:0" if torch.
         perc_input_gen=0.5
         perc_gen=0.9-perc_input_gen-perc_init_gen
 
+    if dataset=="R3BP":
+        ## WHOLE DATA
+        data_filename = f"3BP_{version}"
+        df = pd.read_csv(f"Data/R3BP/{data_filename}.csv")
+        data = df[['x','y']].values
+        data = data[::20]
+        perc_init_fit=0.1
+        perc_input_fit=0.5
+        perc_init_gen=0.1
+        perc_input_gen=0.5
+        perc_gen=0.9-perc_input_gen-perc_init_gen
+
     # scale data
     scaler = StandardScaler()
     data = scaler.fit_transform(data)
