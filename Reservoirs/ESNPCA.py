@@ -5,14 +5,27 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 import numpy as np
-from Reservoirs.ESN import ESN
 
-class ESNPCA(ESN):
-    def __init__(self, input_size, output_size, reservoir_size=512, components=None, spectral_radius=0.9, sparsity=0.5, warmup=100, leaking_rate=0.1):
+class ESNPCA(nn.Module):
+    def __init__(self, input_size, output_size, reservoir_size=512, components=0.05, spectral_radius=0.9, sparsity=0.5, warmup=100, leaking_rate=0.1):
         super(ESNPCA, self).__init__()
 
-        ## SET SEED
-        torch.seed(1234)
+        self.input_size = input_size
+        self.reservoir_size = reservoir_size
+        self.output_size = output_size
+        self.warmup = warmup
+        self.leaking_rate = leaking_rate
+
+        ## NON TRAINABLE PARAMETERS
+        # Input weights
+        self.Win = nn.Parameter(torch.rand(reservoir_size, input_size)-0.5, requires_grad=False)
+        # Reservoir weights
+        self.Wh = nn.Parameter(torch.rand(reservoir_size, reservoir_size)-0.5, requires_grad=False)
+        # Adjust spectral radius
+        self.Wh.data *= spectral_radius / torch.max(torch.abs(torch.linalg.eigvals(self.Wh.data)))
+        # Apply sparsity
+        mask = (torch.rand(reservoir_size, reservoir_size) < sparsity).float()
+        self.Wh.data *= mask
 
         ## TRAINABLE STUFFS
         ## PCA
@@ -29,62 +42,81 @@ class ESNPCA(ESN):
         self.scaler = StandardScaler()
 
     def reservoir(self, input, h):
-        # input: (1, input_size)
-        # h: (1, reservoir_size)
+        # input: (input_size,dimensionality)
+        # h: (reservoir_size,1)
         h_new = F.tanh(self.Win @ input + self.Wh @ h)
         h = (1-self.leaking_rate) * h + self.leaking_rate * h_new
         return h
+    
+    def output(self, reservoir_states):        
+        return reservoir_states @ self.Wout.T + self.bias
+    
+    def thermalize(self, input):
+        device = input.device
+        # input of shape=(warmup,dimensionality)
+        H = torch.zeros(size=(self.warmup+1, self.reservoir_size), device=device)
+        for t in range(self.warmup):
+            h = H[t]
+            x = input[t]
+            H[t+1] = self.reservoir(x, h)
+        return H[1:]
 
-    def forward(self, x):
+    def forward(self, x, h):
         
         # device and input lenght
         device = x.device  
         input_len = x.size(0)
 
         # store extended states
-        H = torch.zeros(size=(input_len-self.warmup, self.reservoir_size + self.input_size)).to(device)
-        # current hidden state
-        h = torch.zeros(self.reservoir_size).to(device)
+        H = torch.zeros(size=(input_len, self.reservoir_size + self.input_size)).to(device)
 
         for t in range(input_len):
             # take single point
-            input = x[t,:]
+            input = x[t]
             # get hidden state from the point extracted and the previous hidden state
             h = self.reservoir(input, h)
-            # wait for the warmup
-            if t >= self.warmup:
-                # after warmup start storing extended states
-                ext_state = torch.cat((h,input))
-                H[t-self.warmup,:] = ext_state  
+            # storing extended states
+            ext_state = torch.cat((h,input))
+            H[t] = ext_state  
 
         return H
 
     def fit(self, input, target):
+        device = input.device
+        # organize data for warmup
         target = target[self.warmup:]
+        warmup_input = input[:self.warmup]
+        input = input[self.warmup:]
+        # warmup process: take last hidden state
+        h = self.thermalize(warmup_input)[-1]
         # get reservoir states: (n_input - warmup, res_size + dimensionality)
-        reservoir_states = self.forward(input)
-        device = reservoir_states.device
+        reservoir_states = self.forward(input, h)
         # fit the scaler on the H tensor
         reservoir_states = self.scaler.fit_transform(reservoir_states.cpu().numpy())
         # dimensionality reduction
         reservoir_states = self.pca.fit_transform(reservoir_states) # output size: (n_input - warmup, ncomponents)
         reservoir_states = torch.tensor(reservoir_states).to(device).float()
-        # simple linear regression on PCA
+        # simple linear regression on PCA components
         # reservoir_states are used as (n_input - warmup) samples of dimension (ncomponents) 
         linreg = self.linreg.fit(reservoir_states.cpu(), target.cpu())
         self.Wout = torch.tensor(linreg.coef_).to(device).float()
         self.bias = torch.tensor(linreg.intercept_).to(device).float()
         # output
-        output = reservoir_states @ self.Wout.T + self.bias
+        output = self.output(reservoir_states)
         return output, target
 
         
     def predict(self, input, extended_states=None):
-        if extended_states is None:
-            # if no starting hidden state is provided calculate them
-            extended_states = self.forward(input)
         
-        device = extended_states.device
+        device = input.device
+        if extended_states is None:
+            # organize data for warmup
+            warmup_input = input[:self.warmup]
+            input = input[self.warmup:]
+            # warmup process: take last hidden state
+            h = self.thermalize(warmup_input)[-1]
+            # if no starting hidden state is provided calculate them
+            extended_states = self.forward(input, h)
 
         ## Generate new prediction
         # scale the states for PCA
@@ -95,7 +127,7 @@ class ESNPCA(ESN):
         extended_states_processed = self.pca.transform(extended_states_processed)
         extended_states_processed = torch.tensor(extended_states_processed).to(device).float()
         # calculate outputs
-        output = extended_states_processed @ self.Wout.T + self.bias
+        output = self.output(extended_states_processed)
 
         ## Create the new vector of extended states
         # calculate the hidden state of this new prediction using the original hidden state 
