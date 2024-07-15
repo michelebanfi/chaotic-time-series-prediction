@@ -3,6 +3,7 @@ import pandas as pd
 import torch
 from sklearn.preprocessing import StandardScaler
 
+diego = True
 # load data function
 def __loadData(pred_len, input_len, train_batch_size=1, val_batch_size=1, file="3BP", train_samples=100, val_samples=100, sampling_rate=10):
     num_files = 10
