@@ -4,7 +4,7 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
-problem = "lorenz"
+problem = "R3BP"
 (input_fit, target_fit), (input_gen, target_gen) = loadData(problem)
 io_size = input_fit.size(1)
 input_fit = input_fit.unsqueeze(0)
