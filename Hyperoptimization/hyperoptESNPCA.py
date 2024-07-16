@@ -6,7 +6,7 @@ import itertools
 
 criterion = NMSE
 
-def optimize(model_class, input_size, output_size, data_train, model_savepath=None, data_generation=None, device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"), verbose=True, seed=0, search_full_space=False, nextractions=10, ntests=1, **kwargs):
+def optimize(model_class, input_size, output_size, data_train, model_savepath=None, data_generation=None, device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"), verbose=True, search_full_space=False, nextractions=10, ntests=1, **kwargs):
     # init params
     best_loss = torch.inf
     best_model, best_args, best_train_pred, best_gen_pred = None, None, None, None
@@ -43,7 +43,6 @@ def optimize(model_class, input_size, output_size, data_train, model_savepath=No
         for _ in range(ntests):
             # instantiate model
             
-            torch.manual_seed(seed)
             model=model_class(input_size, output_size, **args).to(device)
             
             ## FIT

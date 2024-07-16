@@ -25,7 +25,7 @@ n_input_gen = input_gen.size(0)
 
 models_structures = {
     'reservoir_size':[4096],
-    'components':[0.03,0.045,0.05,0.055,0.06]
+    'components':[0.03]
 }
 keys, values = zip(*models_structures.items())
 structures = [dict(zip(keys, v)) for v in itertools.product(*values)]
@@ -36,17 +36,18 @@ for i, structure in enumerate(structures):
     search_space = {
         'components':[structure['components']], 
         'reservoir_size':[structure['reservoir_size']],
-        'spectral_radius':[0.6,0.9,1.2], 
-        'sparsity':[0.3],  
+        'spectral_radius':[0.9,1.2],
+        'leaking_rate':[1],
+        'sparsity':[0.1,0.2],  
         'warmup':[100],
-        'leaking_rate':[0.9,0.7,0.5,0.3,0.1]
+        'seed':[0]
     }
 
     model, args, loss, (pred_fit, upd_target_fit), pred_gen = optimize(model_class=ESNPCA, 
                                 input_size=io_size, output_size=io_size, 
                                 data_train=(input_fit, target_fit), data_generation=None,
-                                search_full_space=False, nextractions=50, ntests=1,
-                                device=device, verbose=False, seed=0,
+                                search_full_space=False, nextractions=100, ntests=1,
+                                device=device, verbose=False,
                                 model_savepath=None, 
                                 **search_space)
     
@@ -55,7 +56,7 @@ for i, structure in enumerate(structures):
         args_str += f"{key}={args[key]}_"
 
     print(f"Loss: {Decimal(loss):.2E} - Parameters: {args}")
-    torch.save(model.state_dict(), f"Models/R3BP/ESNPCA_{data_filename}_optimization/best_model_{args_str}.pth")
+    torch.save(model.state_dict(), f"Models/Lorenz/ESNPCA_{data_filename}_optimization/best_model_{args_str}.pth")
 
     try:
         pred_gen = model.generate(input_gen, n_gen)
@@ -73,7 +74,7 @@ for i, structure in enumerate(structures):
             plt.plot(upd_target_fit[:,v].cpu(), label="Target", linestyle="--")
             plt.plot(pred_fit[:,v].cpu(), label="Predicted")
         plt.legend()
-        plt.savefig(f"Media/R3BP/ESNPCA_{data_filename}_optimization/ESNPCA_fitting_{args_str}.png")
+        plt.savefig(f"Media/Lorenz/ESNPCA_{data_filename}_optimization/ESNPCA_fitting_{args_str}.png")
         plt.close()
 
 
@@ -87,7 +88,7 @@ for i, structure in enumerate(structures):
         plt.plot(range(n_input_gen, n_input_gen+n_gen), target_gen[:,v].cpu(), label="Target", linestyle="--")
         plt.plot(range(n_input_gen, n_input_gen+n_gen), pred_gen[:,v].cpu(), label="Predicted")
     plt.legend()
-    plt.savefig(f"Media/R3BP/ESNPCA_{data_filename}_optimization/ESNPCA_generation_{args_str}.png")
+    plt.savefig(f"Media/Lorenz/ESNPCA_{data_filename}_optimization/ESNPCA_generation_{args_str}.png")
     plt.close()
 
     # 3D GENERATION
@@ -100,7 +101,7 @@ for i, structure in enumerate(structures):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     plt.legend()
-    plt.savefig(f"Media/R3BP/ESNPCA_{data_filename}_optimization/ESNPCA_3Dgeneration_{args_str}.png")
+    plt.savefig(f"Media/Lorenz/ESNPCA_{data_filename}_optimization/ESNPCA_3Dgeneration_{args_str}.png")
     plt.close()
 
 
