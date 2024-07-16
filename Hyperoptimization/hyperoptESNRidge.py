@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
 import torch
-from RidgeBasedExp.Modules.ESNRidge import ESNReservoir
+from Reservoirs.ESNRidge import ESNReservoir
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("../../RestrictedThreeBodyProblem/Data/3BP_0.csv")
-X = df[['x', 'y', 'vx', 'vy']].values
+df = pd.read_csv("../Data/Lorenz/lorenz_0.csv")
+X = df[['x', 'y', 'z']].values
 
 # scale the data
 X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
@@ -15,7 +15,7 @@ X = torch.tensor(X, dtype=torch.float32).unsqueeze(0)
 n = int(X.size(1) * 0.8)
 
 pred_len = 1
-io_size = 4
+io_size = 3
 nb_generations = 100
 seed_timesteps = 100
 
@@ -32,13 +32,12 @@ warming_inputs = X_test1[:, :seed_timesteps, :]
 search_space = {
     'reservoir_size': [100, 200, 300, 400, 500, 600, 1000],
     'spectral_radius': [0.5, 0.9, 1.0, 1.1, 1.5],
-    'sparsity': [0.05, 0.1, 0.15, 0.2],
     'leaking_rate': [0.1, 0.3, 0.5, 0.7],
     'connectivity': [0.05, 0.1, 0.2],
     'ridge_alpha': [1e-8, 1e-6, 1e-4]
 }
 # number of random samples
-n_samples = 10
+n_samples = 20
 
 # create a list to store the results
 results = []
@@ -48,7 +47,6 @@ for i in range(n_samples):
     hyperparams = {
         'reservoir_size': np.random.choice(search_space['reservoir_size']),
         'spectral_radius': np.random.choice(search_space['spectral_radius']),
-        'sparsity': np.random.choice(search_space['sparsity']),
         'leaking_rate': np.random.choice(search_space['leaking_rate']),
         'connectivity': np.random.choice(search_space['connectivity']),
         'ridge_alpha': np.random.choice(search_space['ridge_alpha']),
@@ -56,7 +54,7 @@ for i in range(n_samples):
     }
 
     # create the ESN
-    esn = ESNReservoir(io_size=4, **hyperparams)
+    esn = ESNReservoir(io_size=io_size, **hyperparams)
 
     # train the ESN
     esn.fit(X_train1, y_train1)
@@ -121,7 +119,6 @@ print('Best hyperparameters:', best_hyperparams)
 print('RMSE:', best_result['rmse'])
 print('R^2:', best_result['r2'])
 
-# Best result found during computation:
-# Best hyperparameters: {'reservoir_size': 200, 'spectral_radius': 1.1, 'sparsity': 0.15, 'leaking_rate': 0.1, 'connectivity': 0.1, 'ridge_alpha': 1e-06, 'pred_len': 1}
-# RMSE: 0.03342189314935667
-# R^2: 0.9970140478425422
+# Best hyperparameters: {'reservoir_size': 300, 'spectral_radius': 1.5, 'sparsity': 0.05, 'leaking_rate': 0.1, 'connectivity': 0.05, 'ridge_alpha': 0.0001, 'pred_len': 1}
+# RMSE: 0.007809008089477282
+# R^2: 0.9998204677323173

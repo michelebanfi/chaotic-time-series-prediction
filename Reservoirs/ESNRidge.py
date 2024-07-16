@@ -7,7 +7,7 @@ from sklearn.linear_model import Ridge, Lasso
 torch.manual_seed(0)
 
 class ESNReservoir(nn.Module):
-    def __init__(self, io_size, reservoir_size, pred_len, spectral_radius=0.90, sparsity=0.1,
+    def __init__(self, io_size, reservoir_size, pred_len, spectral_radius=0.90,
                  ridge_alpha=0.03, leaking_rate=1.0, connectivity=0.1):
         super(ESNReservoir, self).__init__()
         self.io_size = io_size
@@ -21,10 +21,6 @@ class ESNReservoir(nn.Module):
 
         # Reservoir weights
         W = torch.randn(reservoir_size, reservoir_size)
-
-        # Apply sparsity and connectivity
-        mask = (torch.rand(reservoir_size, reservoir_size) < sparsity).float()
-        W *= mask
 
         # Adjust spectral radius
         eigenvalues = torch.linalg.eigvals(W)
@@ -84,3 +80,19 @@ class ESNReservoir(nn.Module):
         ridge.fit(states, y)
         self.Wout = torch.tensor(ridge.coef_, dtype=torch.float32).to(device)
         self.Wout_bias = torch.tensor(ridge.intercept_, dtype=torch.float32).to(device)
+
+    def thermalize(self, X):
+        device = X.device
+        h = torch.zeros(1, self.reservoir_size).to(device)
+        input_len = X.size(1)
+        states = torch.zeros((1, h.size(1))).to(device)
+
+        with torch.no_grad():
+            for t in range(input_len):
+                input = X[0, t, :].unsqueeze(0)
+                h_new = F.tanh(self.Win @ input.T + self.W @ h.T).T
+                h = (1 - self.leaking_rate) * h + self.leaking_rate * h_new
+                states = torch.cat((states, h), dim=0)
+
+        return states[:-1]
+

@@ -15,20 +15,19 @@ def plot_reservoir_states(states):
     plt.title('Reservoir States')
     plt.show()
 
-# ESN params
+# Best hyperparameters: {'reservoir_size': 300, 'spectral_radius': 1.5, 'sparsity': 0.05, 'leaking_rate': 0.1, 'connectivity': 0.05, 'ridge_alpha': 0.0001, 'pred_len': 1}
 io_size = 3
-reservoir_size = 1024
+reservoir_size = 400
 pred_len = 1
-spectral_radius = 0.9
-sparsity = 0.1
-leaking_rate = 0.3
-connectivity = 0.1
-ridge_alpha = 0.01
+spectral_radius = 1.5
+leaking_rate = 0.5
+connectivity = 0.2
+ridge_alpha = 1e-04
 
-nb_generations = 50
-seed_timesteps = 100
+nb_generations = 200
+seed_timesteps = 200
 
-esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius, sparsity=sparsity,
+esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius,
                    leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)
 
 X = pd.read_csv("../Data/Lorenz/lorenz_0.csv")
@@ -49,7 +48,7 @@ X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
 
 X = torch.tensor(X, dtype=torch.float32).unsqueeze(0)
 
-n = int(X.size(1) * 0.8)
+n = int(X.size(1) * 0.5)
 
 # Generate target data shifting by pred_len
 y = X[:, pred_len:, :]

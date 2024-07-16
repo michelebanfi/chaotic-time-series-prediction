@@ -18,40 +18,39 @@ def plot_reservoir_states(states):
     plt.show()
 
 # ESN params
-io_size = 4
-reservoir_size = 2048
+io_size = 2
+reservoir_size = 400
 pred_len = 1
-spectral_radius = 0.9
-sparsity = 0.05
-leaking_rate = 0.3
+spectral_radius = 1.5
+leaking_rate = 0.5
 connectivity = 0.2
-ridge_alpha = 1e-4
+ridge_alpha = 1e-04
 
 nb_generations = 100
-seed_timesteps = 100
+seed_timesteps = 200
 
-esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius, sparsity=sparsity,
+esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius,
                    leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)
 
 # X = lorenz(10000)
 
 df = pd.read_csv("../Data/R3BP/3BP_0.csv")
-X = df[['x', 'y', 'vx', 'vy']].values
+X = df[['x', 'y']].values
 X = X[::50]
 
 # plot the data in 2D
-# fig = plt.figure()
-# plt.plot(X[:, 0], X[:, 1])
-# plt.xlabel('X')
-# plt.ylabel('Y')
-# plt.show()
+fig = plt.figure()
+plt.plot(X[:, 0], X[:, 1])
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.show()
 
 # scale the data
 X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
 
 X = torch.tensor(X, dtype=torch.float32).unsqueeze(0)
 
-n = int(X.size(1) * 0.8)
+n = int(X.size(1) * 0.3)
 
 # Generate target data shifting by pred_len
 y = X[:, pred_len:, :]

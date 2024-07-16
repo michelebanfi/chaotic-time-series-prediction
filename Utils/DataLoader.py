@@ -2,6 +2,7 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 import torch
 from sklearn.preprocessing import StandardScaler
+import platform
 
 diego = True
 # load data function
@@ -88,10 +89,15 @@ def __loadData(pred_len, input_len, train_batch_size=1, val_batch_size=1, file="
 
 def loadData(dataset="R3BP", version="0", device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")):
 
+    if platform.platform() == 'macOS-10.16-x86_64-i386-64bit':
+        path = "../"
+    else:
+        path = ""
+
     if dataset=="lorenz":
         ## WHOLE DATA
         data_filename = f"lorenz_{version}"
-        df = pd.read_csv(f"Data/Lorenz/{data_filename}.csv")
+        df = pd.read_csv(f"{path}Data/Lorenz/{data_filename}.csv")
         data = df[['x','y','z']].values
         data = data[::20]
         perc_init_fit=0.1
@@ -103,7 +109,7 @@ def loadData(dataset="R3BP", version="0", device=torch.device("cuda:0" if torch.
     if dataset=="R3BP":
         ## WHOLE DATA
         data_filename = f"3BP_{version}"
-        df = pd.read_csv(f"Data/R3BP/{data_filename}.csv")
+        df = pd.read_csv(f"{path}Data/R3BP/{data_filename}.csv")
         data = df[['x','y']].values
         data = data[::20]
         perc_init_fit=0.1
