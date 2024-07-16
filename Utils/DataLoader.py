@@ -105,7 +105,7 @@ def loadData(dataset="R3BP", version="0", device=torch.device("cuda:0" if torch.
         data_filename = f"3BP_{version}"
         df = pd.read_csv(f"Data/R3BP/{data_filename}.csv")
         data = df[['x','y']].values
-        data = data[::20]
+        data = data[::80]
         perc_init_fit=0.1
         perc_input_fit=0.5
         perc_init_gen=0.1
