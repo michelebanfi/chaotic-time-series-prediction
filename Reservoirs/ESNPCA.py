@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 
 class ESNPCA(nn.Module):
-    def __init__(self, input_size, output_size, reservoir_size=512, components=0.05, spectral_radius=0.9, sparsity=0.5, warmup=100, leaking_rate=0.1):
+    def __init__(self, input_size, output_size, reservoir_size=512, components=0.05, spectral_radius=0.9, sparsity=0.5, warmup=100, leaking_rate=0.1, seed=None):
         super(ESNPCA, self).__init__()
 
         self.input_size = input_size
@@ -15,6 +15,9 @@ class ESNPCA(nn.Module):
         self.output_size = output_size
         self.warmup = warmup
         self.leaking_rate = leaking_rate
+
+        if seed is not None:
+            torch.manual_seed(seed)
 
         ## NON TRAINABLE PARAMETERS
         # Input weights
