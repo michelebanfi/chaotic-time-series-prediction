@@ -27,6 +27,7 @@ def loadData(dataset="R3BP", version="0", device=torch.device("cuda:0" if torch.
         ## WHOLE DATA
         data_filename = f"3BP_{version}"
         df = pd.read_csv(f"{path}Data/R3BP/{data_filename}.csv")
+<<<<<<< HEAD
         data = df[['x','y']].values
         data = data[::20]
         perc_init_fit=0.05
@@ -39,6 +40,10 @@ def loadData(dataset="R3BP", version="0", device=torch.device("cuda:0" if torch.
         t = torch.arange(0,100,1e-2)
         data = 10*torch.exp(-0.03*t)*torch.cos(t)
         data = data.numpy().reshape(-1,1)
+=======
+        data = df[['x','y', 'vx', 'vy']].values
+        data = data[::70]
+>>>>>>> ac8e66eb1e89ce15aa4d4fab796032744413aea3
         perc_init_fit=0.1
         perc_input_fit=0.5
         perc_init_gen=0.1
