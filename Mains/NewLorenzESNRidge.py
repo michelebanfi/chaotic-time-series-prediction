@@ -2,21 +2,57 @@ from Reservoirs.ESNRidge import ESNReservoir
 from Utils.DataLoader import loadData
 import numpy as np
 import torch
+import random
+import os
 import matplotlib.pyplot as plt
 
+def seed_torch(seed=42):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    # np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed) # if you are using multi-GPU.
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+
+seed_torch()
+
 problem = "lorenz"
-(input_fit, target_fit), (input_gen, target_gen) = loadData(problem)
+(input_fit, target_fit), (input_gen, target_gen), scaler = loadData(problem, version=1)
 io_size = input_fit.size(1)
+n_input_gen = input_gen.size(0)
 input_fit = input_fit.unsqueeze(0)
 target_fit = target_fit.unsqueeze(0)
 input_gen = input_gen.unsqueeze(0)
+n_gen = target_gen.size(0)
 
-reservoir_size = 400
+if problem == "R3BP":
+    # scale the position of earth and sun
+    earthx = 90.909090
+    earthy = 0
+
+    sunx = -9.090909
+    suny = 0
+
+    # Updated coordinates array with placeholder values for the additional features
+    coordinates = np.array([[earthx, earthy, 0, 0], [sunx, suny, 0, 0]])
+
+    # Scale the coordinates using the fitted scaler
+    scaled_coordinates = scaler.transform(coordinates)
+
+    # Extract the scaled coordinates (ignoring the placeholder features)
+    scaled_earthx, scaled_earthy = scaled_coordinates[0][:2]
+    scaled_sunx, scaled_suny = scaled_coordinates[1][:2]
+
+    print(scaled_earthx, scaled_earthy, scaled_sunx, scaled_suny)
+
+reservoir_size = 2048
 pred_len = 1
-spectral_radius = 1.5
-leaking_rate = 0.5
+spectral_radius = 1.1
+leaking_rate = 0.51
 connectivity = 0.2
-ridge_alpha = 1e-04
+ridge_alpha = 1e-06
 
 esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius,
                    leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)
@@ -25,9 +61,9 @@ esn.fit(input_fit, target_fit)
 
 # Generate data
 _, h = esn(input_gen)
-X_gen = np.zeros((input_gen.size(1), io_size))
+X_gen = np.zeros((target_gen.size(0), io_size))
 y = input_gen[:, -1, :].cpu().numpy()
-for i in range(input_gen.size(1)):
+for i in range(target_gen.size(0)):
     input = torch.tensor(y, dtype=torch.float32).unsqueeze(0)
     output, h = esn(input, h)
     y = output[:, 0, :].cpu().numpy()
@@ -39,14 +75,17 @@ if problem == "R3BP":
     plt.figure(figsize=(10, 10))
     plt.plot(target_gen[:, 0], target_gen[:, 1], label='True')
     plt.plot(X_gen[:, 0], X_gen[:, 1], label='Generated')
+    plt.scatter(scaled_sunx, scaled_suny, label='Sun', color='red')
+    plt.scatter(scaled_earthx, scaled_earthy, label='Earth', color='green')
     plt.xlabel('X')
     plt.ylabel('Y')
     plt.legend()
     plt.grid()
     plt.show()
+
 elif problem == "lorenz":
     # plot the data in 3D
-    fig = plt.figure()
+    fig = plt.figure(figsize=(15, 15))
     ax = fig.add_subplot(111, projection='3d')
     ax.plot(target_gen[:, 0], target_gen[:, 1], target_gen[:, 2], label='True')
     ax.plot(X_gen[:, 0], X_gen[:, 1], X_gen[:, 2], label='Generated')
@@ -54,5 +93,37 @@ elif problem == "lorenz":
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     plt.legend()
-    plt.show()
+    plt.savefig("../Media/Generated_Lorenz.png")
+    plt.close()
+
+    # plot also the three subplots plots still with the input gen
+    fig, axs = plt.subplots(3, 1, figsize=(15, 15))
+    axs[0].plot(range(n_input_gen), input_gen[0, :, 0], label='Input')
+    axs[0].plot(range(n_input_gen, n_input_gen + n_gen), target_gen[:, 0], label="True", linestyle="--")
+    axs[0].plot(range(n_input_gen, n_input_gen + n_gen), X_gen[:, 0], label='Generated')
+    axs[0].set_xlabel('X')
+    axs[0].set_ylabel('Y')
+    axs[0].legend()
+    axs[0].grid()
+
+    axs[1].plot(range(n_input_gen), input_gen[0, :, 1], label='Input')
+    axs[1].plot(range(n_input_gen, n_input_gen + n_gen), target_gen[:, 1], label="True", linestyle="--")
+    axs[1].plot(range(n_input_gen, n_input_gen + n_gen), X_gen[:, 1], label='Generated')
+    axs[1].set_xlabel('X')
+    axs[1].set_ylabel('Z')
+    axs[1].legend()
+    axs[1].grid()
+
+    axs[2].plot(range(n_input_gen), input_gen[0, :, 2], label='Input')
+    axs[2].plot(range(n_input_gen, n_input_gen + n_gen), target_gen[:, 2], label="True", linestyle="--")
+    axs[2].plot(range(n_input_gen, n_input_gen + n_gen), X_gen[:, 2], label='Generated')
+    axs[2].set_xlabel('Y')
+    axs[2].set_ylabel('Z')
+    axs[2].legend()
+    axs[2].grid()
+
+    plt.savefig("../Media/Generated_Lorenz_subplots.png")
+    plt.close()
+
+
 

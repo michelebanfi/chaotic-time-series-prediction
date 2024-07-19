@@ -15,7 +15,7 @@ results = []
 n_iters=5
 wrmp=100
 
-(input_fit, target_fit), _ = loadData("R3BP")
+(input_fit, target_fit), _ = loadData("lorenz")
 io_size = input_fit.size(1)
 
 for i in range(n_iters):
@@ -28,6 +28,7 @@ for var, varname in enumerate(variables):
     plt.subplot(len(variables), 1, var+1)
     plt.title(varname)
     for result in results:
+        # result = result[:50, :]
         plt.plot(result[:, var].cpu().detach().numpy())
     plt.grid()
 plt.show()

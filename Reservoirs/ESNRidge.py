@@ -3,9 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.linear_model import Ridge, Lasso
 
-# set torch seed
-torch.manual_seed(0)
-
 class ESNReservoir(nn.Module):
     def __init__(self, io_size, reservoir_size, pred_len, spectral_radius=0.90,
                  ridge_alpha=0.03, leaking_rate=1.0, connectivity=0.1):
