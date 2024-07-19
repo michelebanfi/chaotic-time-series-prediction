@@ -37,9 +37,9 @@ class ESNPCA(nn.Module):
         elif components > 0 and components < 1:
             self.ncomp = int(components*self.reservoir_size)
             if self.ncomp == 0:
-                self.ncomp += 1
+                self.ncomp = 1
         else:
-            self.ncomp = 0.1
+            self.ncomp = 0.01
         self.pca = PCA(self.ncomp)
         self.linreg = LinearRegression()
         self.scaler = StandardScaler()
