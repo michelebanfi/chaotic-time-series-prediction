@@ -18,8 +18,8 @@ def seed_torch(seed=42):
 
 seed_torch()
 
-problem = "lorenz"
-(input_fit, target_fit), (input_gen, target_gen), scaler = loadData(problem, version=1)
+problem = "MackeyGlass"
+(input_fit, target_fit), (input_gen, target_gen), scaler = loadData(problem, version=0)
 io_size = input_fit.size(1)
 n_input_gen = input_gen.size(0)
 input_fit = input_fit.unsqueeze(0)
@@ -47,17 +47,35 @@ if problem == "R3BP":
 
     print(scaled_earthx, scaled_earthy, scaled_sunx, scaled_suny)
 
-reservoir_size = 2048
+reservoir_size = 64
 pred_len = 1
-spectral_radius = 1.1
-leaking_rate = 0.51
-connectivity = 0.2
-ridge_alpha = 1e-06
+spectral_radius = 0.3
+leaking_rate = 1
+connectivity = 0.1
+ridge_alpha = 1e-8
 
 esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius,
                    leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)
 
 esn.fit(input_fit, target_fit)
+
+# take the last target_gen.size(0) as input from input_gen
+test_input = input_gen[:, -target_gen.size(0):, :]
+test_target = target_gen
+
+output, _ = esn(test_input)
+
+# plot the result
+plt.figure(figsize=(15, 10))
+plt.plot(output[0, :, 0], label='generated')
+plt.plot(target_gen[:, 0], label='true')
+plt.legend()
+plt.grid()
+plt.xlabel('Time')
+plt.ylabel('x')
+plt.title('Mackey-Glass System - Generated vs True')
+plt.show()
+
 
 # Generate data
 _, h = esn(input_gen)
@@ -124,6 +142,29 @@ elif problem == "lorenz":
 
     plt.savefig("../Media/Generated_Lorenz_subplots.png")
     plt.close()
+
+elif problem == "MackeyGlass":
+
+    # plot the data
+    plt.figure(figsize=(15, 10))
+    plt.plot(range(n_input_gen), input_gen[0, :, 0], label='Input')
+    plt.plot(range(n_input_gen, n_input_gen + n_gen), target_gen[:, 0], label="True", linestyle="--")
+    plt.plot(range(n_input_gen, n_input_gen + n_gen), X_gen[:, 0], label='Generated')
+    plt.xlabel('Time')
+    plt.ylabel('x')
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+    # # plot the 2D phase plot
+    # tau = 17
+    # plt.figure(figsize=(20, 20))
+    # plt.plot(X_gen[:-tau, 0], X_gen[tau:, 0])
+    # plt.xlabel('x(t)')
+    # plt.ylabel('x(t-τ)')
+    # plt.title('Mackey-Glass System - 2D Phase Plot (100,000 points, generated)')
+    # plt.grid()
+    # plt.show()
 
 
 

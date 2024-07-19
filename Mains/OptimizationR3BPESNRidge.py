@@ -19,39 +19,23 @@ def seed_torch(seed=42):
 
 seed_torch()
 
-problem = "R3BP"
-<<<<<<< HEAD
-(input_fit, target_fit), (input_gen, target_gen) = loadData(problem, version=1)
-=======
-(input_fit, target_fit), (input_gen, target_gen) = loadData(problem)
->>>>>>> 81fcb785cf9c553b07a1a58a6ea9991231a8b94f
+problem = "MackeyGlass"
+(input_fit, target_fit), (input_gen, target_gen), _ = loadData(problem, version=1)
 io_size = input_fit.size(1)
 input_fit = input_fit.unsqueeze(0)
 target_fit = target_fit.unsqueeze(0)
 input_gen = input_gen.unsqueeze(0)
 
-search_space = {
-<<<<<<< HEAD
-    'reservoir_size': [2048],
-    'spectral_radius': [0.9, 1.0, 1.1, 1.2],
-    'leaking_rate': [0.3, 0.5, 0.7, 0.95, 1],
-    'connectivity': [0.150, 0.2],
-    'ridge_alpha': [1e-2, 1e-4, 1e-6, 1e-8]
-}
-
 # number of random samples
-n_samples = 25
-=======
-    'reservoir_size': [512, 1024],
-    'spectral_radius': [0.9, 1.1, 1.2],
-    'leaking_rate': [0.4, 0.5, 0.6, 0.8],
-    'connectivity': [0.05, 0.1, 0.2],
+n_samples = 50
+
+search_space = {
+    'reservoir_size': [256, 512, 1024, 2048],
+    'spectral_radius': [0.8, 0.9, 1.1, 1.2],
+    'leaking_rate': [0.4, 0.5, 0.6, 0.8, 0.9, 1],
+    'connectivity': [0.02, 0.05, 0.1, 0.2],
     'ridge_alpha': [1e-4, 1e-6, 1e-8]
 }
-
-# number of random samples
-n_samples = 20
->>>>>>> 81fcb785cf9c553b07a1a58a6ea9991231a8b94f
 
 # create a list to store the results
 results = []
@@ -97,14 +81,6 @@ for i in range(n_samples):
     # calculate the NMSE
     nmse = NMSE(new_X_gen, new_target_gen).item()
 
-    # store the results
-    results.append({
-        'hyperparams': hyperparams,
-        # 'rmse': rmse,
-        # 'r2': r2,
-        'nmse': nmse
-    })
-
     if problem == "R3BP":
 
         # calculate the position of the earth and the
@@ -131,11 +107,8 @@ for i in range(n_samples):
         ax = fig.add_subplot(111, projection='3d')
         ax.plot(target_gen[:, 0], target_gen[:, 1], target_gen[:, 2], label='True')
         ax.plot(X_gen[:, 0], X_gen[:, 1], X_gen[:, 2], label='Generated')
-<<<<<<< HEAD
         plt.title(
             f"Reservoir Size: {hyperparams['reservoir_size']}, Spectral Radius: {hyperparams['spectral_radius']}, Leaking Rate: {hyperparams['leaking_rate']}, Connectivity: {hyperparams['connectivity']}, Ridge Alpha: {hyperparams['ridge_alpha']}")
-=======
->>>>>>> 81fcb785cf9c553b07a1a58a6ea9991231a8b94f
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
@@ -143,26 +116,49 @@ for i in range(n_samples):
         plt.show()
         plt.close()
 
-    # X_t = X_gen
+    elif problem == "MackeyGlass":
+        print("sium")
+        # plot the data in 2D
+        # plt.figure(figsize=(10, 10))
+        # plt.plot(target_gen[:, 0], label='True')
+        # plt.plot(X_gen[:, 0], label='Generated')
+        # plt.title(
+        #     f"Reservoir Size: {hyperparams['reservoir_size']}, Spectral Radius: {hyperparams['spectral_radius']}, Leaking Rate: {hyperparams['leaking_rate']}, Connectivity: {hyperparams['connectivity']}, Ridge Alpha: {hyperparams['ridge_alpha']}")
+        # plt.xlabel('X')
+        # plt.ylabel('Y')
+        # plt.legend()
+        # plt.grid()
+        # plt.show()
 
-    # np_target_gen = target_gen.numpy()
-    # # calculate the RMSE
-    # rmse = np.sqrt(np.mean((X_gen - np_target_gen) ** 2))
-    #
-    # # calculate the R^2 score
-    # ss_res = np.sum((np_target_gen - X_gen) ** 2)
-    # ss_tot = np.sum((np_target_gen - np.mean(np_target_gen)) ** 2)
-    # r2 = 1 - ss_res / ss_tot
+    X_t = X_gen
+
+    np_target_gen = target_gen.numpy()
+    # calculate the RMSE
+    rmse = np.sqrt(np.mean((X_gen - np_target_gen) ** 2))
+
+    # calculate the R^2 score
+    ss_res = np.sum((np_target_gen - X_gen) ** 2)
+    ss_tot = np.sum((np_target_gen - np.mean(np_target_gen)) ** 2)
+    r2 = 1 - ss_res / ss_tot
+
+    # store the results
+    results.append({
+        'hyperparams': hyperparams,
+        # 'rmse': rmse,
+        # 'r2': r2,
+        'nmse': nmse
+    })
 
 
-# # plot the results
-# rmse = [r['rmse'] for r in results]
-# r2 = [r['r2'] for r in results]
-#
-# plt.scatter(rmse, r2)
-# plt.xlabel('RMSE')
-# plt.ylabel('R^2')
-# plt.show()
+
+# plot the results
+rmse = [r['rmse'] for r in results]
+r2 = [r['r2'] for r in results]
+
+plt.scatter(rmse, r2)
+plt.xlabel('RMSE')
+plt.ylabel('R^2')
+plt.show()
 
 # find the best hyperparameters
 best_result = min(results, key=lambda x: x['nmse'])
@@ -170,3 +166,13 @@ best_hyperparams = best_result['hyperparams']
 print('Best hyperparameters:', best_hyperparams)
 print('NMSE:', best_result['nmse'])
 # print('R^2:', best_result['r2'])
+
+best_result = min(results, key=lambda x: x['r2'])
+best_hyperparams = best_result['hyperparams']
+print('Best hyperparameters:', best_hyperparams)
+print('r2:', best_result['r2'])
+
+best_result = min(results, key=lambda x: x['rmse'])
+best_hyperparams = best_result['hyperparams']
+print('Best hyperparameters:', best_hyperparams)
+print('RMSE:', best_result['rmse'])
