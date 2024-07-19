@@ -20,13 +20,28 @@ def seed_torch(seed=42):
 seed_torch()
 
 problem = "R3BP"
+<<<<<<< HEAD
+(input_fit, target_fit), (input_gen, target_gen) = loadData(problem, version=1)
+=======
 (input_fit, target_fit), (input_gen, target_gen) = loadData(problem)
+>>>>>>> 81fcb785cf9c553b07a1a58a6ea9991231a8b94f
 io_size = input_fit.size(1)
 input_fit = input_fit.unsqueeze(0)
 target_fit = target_fit.unsqueeze(0)
 input_gen = input_gen.unsqueeze(0)
 
 search_space = {
+<<<<<<< HEAD
+    'reservoir_size': [2048],
+    'spectral_radius': [0.9, 1.0, 1.1, 1.2],
+    'leaking_rate': [0.3, 0.5, 0.7, 0.95, 1],
+    'connectivity': [0.150, 0.2],
+    'ridge_alpha': [1e-2, 1e-4, 1e-6, 1e-8]
+}
+
+# number of random samples
+n_samples = 25
+=======
     'reservoir_size': [512, 1024],
     'spectral_radius': [0.9, 1.1, 1.2],
     'leaking_rate': [0.4, 0.5, 0.6, 0.8],
@@ -36,6 +51,7 @@ search_space = {
 
 # number of random samples
 n_samples = 20
+>>>>>>> 81fcb785cf9c553b07a1a58a6ea9991231a8b94f
 
 # create a list to store the results
 results = []
@@ -115,6 +131,11 @@ for i in range(n_samples):
         ax = fig.add_subplot(111, projection='3d')
         ax.plot(target_gen[:, 0], target_gen[:, 1], target_gen[:, 2], label='True')
         ax.plot(X_gen[:, 0], X_gen[:, 1], X_gen[:, 2], label='Generated')
+<<<<<<< HEAD
+        plt.title(
+            f"Reservoir Size: {hyperparams['reservoir_size']}, Spectral Radius: {hyperparams['spectral_radius']}, Leaking Rate: {hyperparams['leaking_rate']}, Connectivity: {hyperparams['connectivity']}, Ridge Alpha: {hyperparams['ridge_alpha']}")
+=======
+>>>>>>> 81fcb785cf9c553b07a1a58a6ea9991231a8b94f
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
