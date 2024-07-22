@@ -15,7 +15,7 @@ dde = jitcdde(mackey_glass)
 dde.constant_past([1.12])
 
 # Solve and sample
-times = np.linspace(0, 1000, 10001)
+times = np.linspace(0, 1000, 100001)
 solution = []
 
 for time in times:
@@ -31,7 +31,7 @@ y_sampled = solution[::sampling]
 
 # Save the data to CSV
 df = pd.DataFrame({'t': t_sampled, 'x': y_sampled})
-df.to_csv('../Data/MackeyGlass/mackey_glass_1.csv', index=False)
+df.to_csv('../Data/MackeyGlass/mackey_glass_2.csv', index=False)
 
 # Plot the data
 plt.figure(figsize=(15, 10))

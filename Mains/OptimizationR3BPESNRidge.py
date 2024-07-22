@@ -20,20 +20,20 @@ def seed_torch(seed=42):
 seed_torch()
 
 problem = "MackeyGlass"
-(input_fit, target_fit), (input_gen, target_gen), _ = loadData(problem, version=1)
+(input_fit, target_fit), (input_gen, target_gen), _ = loadData(problem, version=2)
 io_size = input_fit.size(1)
 input_fit = input_fit.unsqueeze(0)
 target_fit = target_fit.unsqueeze(0)
 input_gen = input_gen.unsqueeze(0)
 
 # number of random samples
-n_samples = 50
+n_samples = 25
 
 search_space = {
-    'reservoir_size': [256, 512, 1024, 2048],
-    'spectral_radius': [0.8, 0.9, 1.1, 1.2],
-    'leaking_rate': [0.4, 0.5, 0.6, 0.8, 0.9, 1],
-    'connectivity': [0.02, 0.05, 0.1, 0.2],
+    'reservoir_size': [512],
+    'spectral_radius': [0.9, 1.0, 1.1, 1.2, 1.3, 1.4],
+    'leaking_rate': [0.4, 0.5, 0.6, 0.7, 0.9],
+    'connectivity': [0.1, 0.2],
     'ridge_alpha': [1e-4, 1e-6, 1e-8]
 }
 
@@ -119,16 +119,16 @@ for i in range(n_samples):
     elif problem == "MackeyGlass":
         print("sium")
         # plot the data in 2D
-        # plt.figure(figsize=(10, 10))
-        # plt.plot(target_gen[:, 0], label='True')
-        # plt.plot(X_gen[:, 0], label='Generated')
-        # plt.title(
-        #     f"Reservoir Size: {hyperparams['reservoir_size']}, Spectral Radius: {hyperparams['spectral_radius']}, Leaking Rate: {hyperparams['leaking_rate']}, Connectivity: {hyperparams['connectivity']}, Ridge Alpha: {hyperparams['ridge_alpha']}")
-        # plt.xlabel('X')
-        # plt.ylabel('Y')
-        # plt.legend()
-        # plt.grid()
-        # plt.show()
+        plt.figure(figsize=(10, 10))
+        plt.plot(target_gen[:, 0], label='True')
+        plt.plot(X_gen[:, 0], label='Generated')
+        plt.title(
+            f"Reservoir Size: {hyperparams['reservoir_size']}, Spectral Radius: {hyperparams['spectral_radius']}, Leaking Rate: {hyperparams['leaking_rate']}, Connectivity: {hyperparams['connectivity']}, Ridge Alpha: {hyperparams['ridge_alpha']}")
+        plt.xlabel('X')
+        plt.ylabel('Y')
+        plt.legend()
+        plt.grid()
+        plt.show()
 
     X_t = X_gen
 
@@ -144,8 +144,8 @@ for i in range(n_samples):
     # store the results
     results.append({
         'hyperparams': hyperparams,
-        # 'rmse': rmse,
-        # 'r2': r2,
+        'rmse': rmse,
+        'r2': r2,
         'nmse': nmse
     })
 
@@ -167,7 +167,7 @@ print('Best hyperparameters:', best_hyperparams)
 print('NMSE:', best_result['nmse'])
 # print('R^2:', best_result['r2'])
 
-best_result = min(results, key=lambda x: x['r2'])
+best_result = max(results, key=lambda x: x['r2'])
 best_hyperparams = best_result['hyperparams']
 print('Best hyperparameters:', best_hyperparams)
 print('r2:', best_result['r2'])

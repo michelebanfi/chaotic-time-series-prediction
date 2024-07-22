@@ -50,10 +50,11 @@ def loadData(dataset="R3BP", version="0", device=torch.device("cuda:0" if torch.
         df = pd.read_csv(f"{path}Data/MackeyGlass/{data_filename}.csv")
         data = df['x'].values
         data = data.reshape(-1,1)
+        data = data[::10]
         perc_init_fit=0.1
-        perc_input_fit=0.7
+        perc_input_fit=0.6
         perc_init_gen=0.1
-        perc_input_gen=0.7
+        perc_input_gen=0.6
         perc_gen=0.99-perc_input_gen-perc_init_gen
 
 

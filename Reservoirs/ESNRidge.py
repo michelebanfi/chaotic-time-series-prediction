@@ -80,7 +80,9 @@ class ESNReservoir(nn.Module):
 
     def thermalize(self, X):
         device = X.device
-        h = torch.zeros(1, self.reservoir_size).to(device)
+
+        # generate numbers between 0 and 100
+        h = torch.rand(1, self.reservoir_size).to(device)
         input_len = X.size(1)
         states = torch.zeros((1, h.size(1))).to(device)
 
@@ -91,5 +93,5 @@ class ESNReservoir(nn.Module):
                 h = (1 - self.leaking_rate) * h + self.leaking_rate * h_new
                 states = torch.cat((states, h), dim=0)
 
-        return states[:-1]
+        return states[1:]
 

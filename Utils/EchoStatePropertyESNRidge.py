@@ -16,15 +16,15 @@ results = []
 n_iters=5
 wrmp=100
 
-(input_fit, target_fit), _ = loadData("lorenz")
+(input_fit, target_fit), _, _ = loadData("lorenz")
 io_size = input_fit.size(1)
-# input_fit = input_fit[::10]
+input_fit = input_fit[::10]
 input_fit = input_fit[:100]
 input_fit = input_fit.unsqueeze(0)
 
-torch.manual_seed(0)
+# torch.manual_seed(0)
+model = ESNReservoir(io_size, 1024, pred_len=1, spectral_radius=0.9, connectivity=0.1, leaking_rate=0.5).to(device)
 for i in range(n_iters):
-    model = ESNReservoir(io_size, 1024, pred_len=1, spectral_radius=0.9, connectivity=0.1, leaking_rate=0.5).to(device)
     result = model.thermalize(input_fit)
     results.append(result)
 
