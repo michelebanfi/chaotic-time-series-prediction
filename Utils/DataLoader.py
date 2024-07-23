@@ -50,13 +50,13 @@ def loadData(dataset="R3BP", version="0", device=torch.device("cuda:0" if torch.
         data_filename = f"mackey_glass_{version}"
         df = pd.read_csv(f"{path}Data/MackeyGlass/{data_filename}.csv")
         data = df['x'].values
-        # data = mackey_glass(n_timesteps=2000)
+        data = mackey_glass(n_timesteps=2000)
         data = data.reshape(-1, 1)
-        data = data[::80]
-        perc_init_fit=0.1
-        perc_input_fit=0.5
-        perc_init_gen=0.1
-        perc_input_gen=0.5
+        # data = data[::20]
+        perc_init_fit=0
+        perc_input_fit=0.8
+        perc_init_gen=0
+        perc_input_gen=0.8
         perc_gen=0.9-perc_input_gen-perc_init_gen
 
 

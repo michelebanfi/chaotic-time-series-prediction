@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 from Utils.Losses import NormalizedMeanSquaredError as NMSE
+import itertools
 import os
 
 def seed_torch(seed=42):
@@ -27,7 +28,7 @@ target_fit = target_fit.unsqueeze(0)
 input_gen = input_gen.unsqueeze(0)
 
 # number of random samples
-n_samples = 20
+n_samples = 30
 
 # search_space = {
 #     'reservoir_size': [512, 1024, 1500, 2048],
@@ -38,11 +39,11 @@ n_samples = 20
 # }
 
 search_space = {
-    'reservoir_size': [1024,],
-    'spectral_radius': [0.9, 1.0, 1.1],
-    'leaking_rate': [0.3, 0.35, 0.4],
-    'connectivity': [0.2],
-    'ridge_alpha': [1e-4, 1e-6, 1e-8]
+    'reservoir_size': [2048],
+    'spectral_radius': [0.8, 0.99, 1.0, 1.01],
+    'leaking_rate': [0.15],
+    'connectivity': [0.1],
+    'ridge_alpha': [0.5e-8, 1e-8, 1e-9, 1e-10]
 }
 
 # create a list to store the results
@@ -51,14 +52,19 @@ results = []
 # states
 hh = []
 
-for i in range(n_samples):
+keys, values = zip(*search_space.items())
+permutations_dicts = [dict(zip(keys, v)) for v in itertools.product(*values)]
+
+print(permutations_dicts.__len__())
+for i in range(permutations_dicts.__len__()):
     # sample the hyperparameters
+
     hyperparams = {
-        'reservoir_size': np.random.choice(search_space['reservoir_size']),
-        'spectral_radius': np.random.choice(search_space['spectral_radius']),
-        'leaking_rate': np.random.choice(search_space['leaking_rate']),
-        'connectivity': np.random.choice(search_space['connectivity']),
-        'ridge_alpha': np.random.choice(search_space['ridge_alpha']),
+        'reservoir_size': permutations_dicts[i]['reservoir_size'],
+        'spectral_radius': permutations_dicts[i]['spectral_radius'],
+        'leaking_rate': permutations_dicts[i]['leaking_rate'],
+        'connectivity': permutations_dicts[i]['connectivity'],
+        'ridge_alpha': permutations_dicts[i]['ridge_alpha'],
         'pred_len': 1,
     }
 
@@ -67,8 +73,11 @@ for i in range(n_samples):
     # create the ESN
     esn = ESNReservoir(io_size=io_size, **hyperparams)
 
-    # train the ESN
-    esn.fit(input_fit, target_fit)
+    outputs = esn.fit(input_fit, target_fit)
+    outputs = torch.tensor(outputs, dtype=torch.float32)
+
+    nmse = NMSE(outputs, target_fit).item()
+    print("NMSE: ", nmse)
 
     _, h = esn(input_gen)
 
@@ -83,11 +92,6 @@ for i in range(n_samples):
         z = output[0, 0, :].cpu().numpy()
         X_gen[i] = z
 
-
-    new_X_gen = torch.tensor(X_gen, dtype=torch.float32).unsqueeze(0)
-    new_target_gen = target_gen.unsqueeze(0)
-    # calculate the NMSE
-    nmse = NMSE(new_X_gen, new_target_gen).item()
 
     if problem == "R3BP":
 
@@ -136,7 +140,7 @@ for i in range(n_samples):
         plt.ylabel('Y')
         plt.legend()
         plt.grid()
-        plt.show()
+        plt.savefig(f"../Media/8/{hyperparams['reservoir_size']}_{hyperparams['spectral_radius']}_{hyperparams['leaking_rate']}_{hyperparams['connectivity']}_{hyperparams['ridge_alpha']}.png")
 
     X_t = X_gen
 
@@ -175,12 +179,12 @@ print('Best hyperparameters:', best_hyperparams)
 print('NMSE:', best_result['nmse'])
 # print('R^2:', best_result['r2'])
 
-best_result = max(results, key=lambda x: x['r2'])
-best_hyperparams = best_result['hyperparams']
-print('Best hyperparameters:', best_hyperparams)
-print('r2:', best_result['r2'])
-
-best_result = min(results, key=lambda x: x['rmse'])
-best_hyperparams = best_result['hyperparams']
-print('Best hyperparameters:', best_hyperparams)
-print('RMSE:', best_result['rmse'])
+# best_result = max(results, key=lambda x: x['r2'])
+# best_hyperparams = best_result['hyperparams']
+# print('Best hyperparameters:', best_hyperparams)
+# print('r2:', best_result['r2'])
+#
+# best_result = min(results, key=lambda x: x['rmse'])
+# best_hyperparams = best_result['hyperparams']
+# print('Best hyperparameters:', best_hyperparams)
+# print('RMSE:', best_result['rmse'])

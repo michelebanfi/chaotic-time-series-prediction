@@ -15,19 +15,6 @@ def lorenz(t, state, sigma=10, beta=8/3, rho=28):
     dzdt = x * y - beta * z
     return [dxdt, dydt, dzdt]
 
-# Define the Mackey-Glass equation with delay
-def mackey_glass(X, t, beta=0.2, gamma=0.1, tau=17):
-    x_tau = X(t - tau)
-    dxdt = beta * x_tau / (1 + x_tau ** 10) - gamma * X(t)
-    return dxdt
-
-# Harmonic oscillator
-def harmonic_oscillator(t, state, k=1, m=1):
-    x, v = state
-    dxdt = v
-    dvdt = -k / m * x
-    return [dxdt, dvdt]
-
 # Restricted three-body problem
 def restricted_three_body(t, state, m1, m2, x1, y1, x2, y2):
     # x, y, vx, vy

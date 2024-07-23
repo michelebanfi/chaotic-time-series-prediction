@@ -5,7 +5,7 @@ from jitcdde import jitcdde, y, t
 
 # Define the Mackey-Glass equation
 def mackey_glass():
-    beta, gamma, tau = 0.2, 0.1, 17
+    beta, gamma, tau = 0.2, 0.1, 16
     yield beta * y(0, t - tau) / (1 + y(0, t - tau)**10) - gamma * y(0)
 
 # Set up the DDE
@@ -43,7 +43,7 @@ plt.title('Mackey-Glass System')
 plt.show()
 
 # Create 2D phase plot
-tau = 17  # This is the delay used in the Mackey-Glass equation
+tau = 16  # This is the delay used in the Mackey-Glass equation
 plt.figure(figsize=(20, 20))
 plt.plot(y_sampled[:-tau], y_sampled[tau:])
 plt.xlabel('x(t)')

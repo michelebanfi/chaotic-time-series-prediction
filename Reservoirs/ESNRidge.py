@@ -78,11 +78,14 @@ class ESNReservoir(nn.Module):
         self.Wout = torch.tensor(ridge.coef_, dtype=torch.float32).to(device)
         self.Wout_bias = torch.tensor(ridge.intercept_, dtype=torch.float32).to(device)
 
+        states = torch.tensor(states, dtype=torch.float32).to(device)
+        return torch.matmul(states, self.Wout.T) + self.Wout_bias
+
     def thermalize(self, X):
         device = X.device
 
         # generate numbers between 0 and 100
-        h = torch.zeros(1, self.reservoir_size).to(device)
+        h = torch.rand(1, self.reservoir_size).to(device)
         input_len = X.size(1)
         states = torch.zeros((1, h.size(1))).to(device)
 

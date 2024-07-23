@@ -1,7 +1,3 @@
-import sys
-import os
-sys.path.append(os.getcwd())
-
 import matplotlib.pyplot as plt
 import torch
 from Reservoirs.ESNRidge import ESNReservoir
@@ -23,7 +19,7 @@ input_fit = input_fit[:100]
 input_fit = input_fit.unsqueeze(0)
 
 # torch.manual_seed(0)
-model = ESNReservoir(io_size, 1024, pred_len=1, spectral_radius=0.9, connectivity=0.1, leaking_rate=0.5).to(device)
+model = ESNReservoir(io_size, 1024, pred_len=1, spectral_radius=4, connectivity=0.1, leaking_rate=1).to(device)
 for i in range(n_iters):
     result = model.thermalize(input_fit)
     results.append(result)

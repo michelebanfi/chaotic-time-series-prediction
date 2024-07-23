@@ -1,3 +1,4 @@
+from reservoirpy.nodes import Reservoir, Ridge, ESN
 from Reservoirs.ESNRidge import ESNReservoir
 from Utils.DataLoader import loadData
 import numpy as np
@@ -5,6 +6,7 @@ import torch
 import random
 import os
 import matplotlib.pyplot as plt
+from Utils.Losses import NormalizedMeanSquaredError as NMSE
 
 def seed_torch(seed=42):
     random.seed(seed)
@@ -49,15 +51,20 @@ if problem == "R3BP":
 
 reservoir_size = 1024
 pred_len = 1
-spectral_radius = 0.95
-leaking_rate = 0.31
-connectivity = 0.2
-ridge_alpha = 1e-8
+spectral_radius = 0.99
+leaking_rate = 0.15
+connectivity = 0.1
+ridge_alpha = 5e-9
 
 esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius,
-                   leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)
+                leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)
 
-esn.fit(input_fit, target_fit)
+
+outputs = esn.fit(input_fit, target_fit)
+outputs = torch.tensor(outputs, dtype=torch.float32)
+
+nmse = NMSE(outputs, target_fit).item()
+print("NMSE: ", nmse)
 
 # take the last target_gen.size(0) as input from input_gen
 test_input = input_gen[:, -target_gen.size(0):, :]
@@ -73,7 +80,7 @@ plt.legend()
 plt.grid()
 plt.xlabel('Time')
 plt.ylabel('x')
-plt.title('Mackey-Glass System - Generated vs True')
+plt.title('Mackey-Glass System - TEST')
 plt.show()
 #
 #
@@ -146,14 +153,24 @@ elif problem == "lorenz":
 elif problem == "MackeyGlass":
 
     # plot the data
+    # plt.figure(figsize=(15, 10))
+    # plt.plot(range(n_input_gen), input_gen[0, :, 0], label='Input')
+    # plt.plot(range(n_input_gen, n_input_gen + n_gen), target_gen[:, 0], label="True", linestyle="--")
+    # plt.plot(range(n_input_gen, n_input_gen + n_gen), X_gen[:, 0], label='Generated')
+    # plt.xlabel('Time')
+    # plt.ylabel('x')
+    # plt.legend()
+    # plt.grid()
+    # plt.show()
+
     plt.figure(figsize=(15, 10))
-    plt.plot(range(n_input_gen), input_gen[0, :, 0], label='Input')
-    plt.plot(range(n_input_gen, n_input_gen + n_gen), target_gen[:, 0], label="True", linestyle="--")
-    plt.plot(range(n_input_gen, n_input_gen + n_gen), X_gen[:, 0], label='Generated')
+    plt.plot(target_gen[:, 0], label='True')
+    plt.plot(X_gen[:, 0], label='Generated')
     plt.xlabel('Time')
     plt.ylabel('x')
     plt.legend()
     plt.grid()
+    plt.title('Mackey-Glass System - Generated vs True')
     plt.show()
 
     # # plot the 2D phase plot
