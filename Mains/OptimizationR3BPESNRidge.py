@@ -38,10 +38,10 @@ n_samples = 20
 # }
 
 search_space = {
-    'reservoir_size': [1024, 2048],
+    'reservoir_size': [1024,],
     'spectral_radius': [0.9, 1.0, 1.1],
-    'leaking_rate': [0.3, 0.35, 0.4, 0.6, 0.7, 0.9],
-    'connectivity': [0.1, 0.2],
+    'leaking_rate': [0.3, 0.35, 0.4],
+    'connectivity': [0.2],
     'ridge_alpha': [1e-4, 1e-6, 1e-8]
 }
 

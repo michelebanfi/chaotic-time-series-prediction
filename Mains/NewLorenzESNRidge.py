@@ -49,10 +49,10 @@ if problem == "R3BP":
 
 reservoir_size = 1024
 pred_len = 1
-spectral_radius = 1.0
-leaking_rate = 0.3
+spectral_radius = 0.95
+leaking_rate = 0.31
 connectivity = 0.2
-ridge_alpha = 1e-6
+ridge_alpha = 1e-8
 
 esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius,
                    leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)
