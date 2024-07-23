@@ -19,7 +19,7 @@ def seed_torch(seed=42):
 seed_torch()
 
 problem = "MackeyGlass"
-(input_fit, target_fit), (input_gen, target_gen), scaler = loadData(problem, version=5)
+(input_fit, target_fit), (input_gen, target_gen), scaler = loadData(problem, version=6)
 io_size = input_fit.size(1)
 n_input_gen = input_gen.size(0)
 input_fit = input_fit.unsqueeze(0)
@@ -49,10 +49,10 @@ if problem == "R3BP":
 
 reservoir_size = 1024
 pred_len = 1
-spectral_radius = 0.2
-leaking_rate = 0.4
+spectral_radius = 1.0
+leaking_rate = 0.3
 connectivity = 0.2
-ridge_alpha = 1e-8
+ridge_alpha = 1e-6
 
 esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_radius,
                    leaking_rate=leaking_rate, connectivity=connectivity, ridge_alpha=ridge_alpha)

@@ -20,14 +20,14 @@ def seed_torch(seed=42):
 seed_torch()
 
 problem = "MackeyGlass"
-(input_fit, target_fit), (input_gen, target_gen), _ = loadData(problem, version=5)
+(input_fit, target_fit), (input_gen, target_gen), _ = loadData(problem, version=6)
 io_size = input_fit.size(1)
 input_fit = input_fit.unsqueeze(0)
 target_fit = target_fit.unsqueeze(0)
 input_gen = input_gen.unsqueeze(0)
 
 # number of random samples
-n_samples = 30
+n_samples = 20
 
 # search_space = {
 #     'reservoir_size': [512, 1024, 1500, 2048],
@@ -38,11 +38,11 @@ n_samples = 30
 # }
 
 search_space = {
-    'reservoir_size': [512, 1024, 2048],
-    'spectral_radius': [0.99, 1.0, 1.2],
-    'leaking_rate': [0.3, 0.35, 0.4, 0.5, 0.6],
-    'connectivity': [0.1, 0.15, 0.2],
-    'ridge_alpha': [1e-4]
+    'reservoir_size': [1024, 2048],
+    'spectral_radius': [0.9, 1.0, 1.1],
+    'leaking_rate': [0.3, 0.35, 0.4, 0.6, 0.7, 0.9],
+    'connectivity': [0.1, 0.2],
+    'ridge_alpha': [1e-4, 1e-6, 1e-8]
 }
 
 # create a list to store the results

@@ -52,17 +52,18 @@ def loadData(dataset="R3BP", version="0", device=torch.device("cuda:0" if torch.
         data = df['x'].values
         # data = mackey_glass(n_timesteps=2000)
         data = data.reshape(-1, 1)
-        data = data[::2]
-        perc_init_fit=0.1
+        data = data[::80]
+        perc_init_fit=0.05
         perc_input_fit=0.5
-        perc_init_gen=0.1
+        perc_init_gen=0.05
         perc_input_gen=0.5
         perc_gen=0.9-perc_input_gen-perc_init_gen
 
 
     # scale data
     scaler = StandardScaler()
-    data = scaler.fit_transform(data)
+    #data = scaler.fit_transform(data)
+    data = 2 * (data - data.min()) / (data.max() - data.min()) - 1
     data = torch.tensor(data).float().to(device)
     n_samples = data.size(0)
 
