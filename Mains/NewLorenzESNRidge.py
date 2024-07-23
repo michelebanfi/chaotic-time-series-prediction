@@ -19,7 +19,7 @@ def seed_torch(seed=42):
 seed_torch()
 
 problem = "MackeyGlass"
-(input_fit, target_fit), (input_gen, target_gen), scaler = loadData(problem, version=2)
+(input_fit, target_fit), (input_gen, target_gen), scaler = loadData(problem, version=5)
 io_size = input_fit.size(1)
 n_input_gen = input_gen.size(0)
 input_fit = input_fit.unsqueeze(0)
@@ -49,8 +49,8 @@ if problem == "R3BP":
 
 reservoir_size = 1024
 pred_len = 1
-spectral_radius = 1.2
-leaking_rate = 0.5
+spectral_radius = 0.2
+leaking_rate = 0.4
 connectivity = 0.2
 ridge_alpha = 1e-8
 
@@ -59,22 +59,22 @@ esn = ESNReservoir(io_size, reservoir_size, pred_len, spectral_radius=spectral_r
 
 esn.fit(input_fit, target_fit)
 
-# # take the last target_gen.size(0) as input from input_gen
-# test_input = input_gen[:, -target_gen.size(0):, :]
-# test_target = target_gen
-#
-# output, _ = esn(test_input)
-#
-# # plot the result
-# plt.figure(figsize=(15, 10))
-# plt.plot(output[0, :, 0], label='generated')
-# plt.plot(target_gen[:, 0], label='true')
-# plt.legend()
-# plt.grid()
-# plt.xlabel('Time')
-# plt.ylabel('x')
-# plt.title('Mackey-Glass System - Generated vs True')
-# plt.show()
+# take the last target_gen.size(0) as input from input_gen
+test_input = input_gen[:, -target_gen.size(0):, :]
+test_target = target_gen
+
+output, _ = esn(test_input)
+
+# plot the result
+plt.figure(figsize=(15, 10))
+plt.plot(target_gen[:, 0], label='true')
+plt.plot(output[0, :, 0], label='generated')
+plt.legend()
+plt.grid()
+plt.xlabel('Time')
+plt.ylabel('x')
+plt.title('Mackey-Glass System - Generated vs True')
+plt.show()
 #
 #
 # Generate data

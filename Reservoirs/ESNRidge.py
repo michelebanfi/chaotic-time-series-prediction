@@ -82,7 +82,7 @@ class ESNReservoir(nn.Module):
         device = X.device
 
         # generate numbers between 0 and 100
-        h = torch.rand(1, self.reservoir_size).to(device)
+        h = torch.zeros(1, self.reservoir_size).to(device)
         input_len = X.size(1)
         states = torch.zeros((1, h.size(1))).to(device)
 

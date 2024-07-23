@@ -3,13 +3,14 @@ import pandas as pd
 import torch
 from sklearn.preprocessing import StandardScaler
 import platform
+from reservoirpy.datasets import mackey_glass
 
 def loadData(dataset="R3BP", version="0", device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")):
 
     if platform.platform() == 'macOS-10.16-x86_64-i386-64bit':
         path = "../"
     else:
-        path = ""
+        path = "../"
 
     if dataset=="lorenz":
         ## WHOLE DATA
@@ -49,13 +50,14 @@ def loadData(dataset="R3BP", version="0", device=torch.device("cuda:0" if torch.
         data_filename = f"mackey_glass_{version}"
         df = pd.read_csv(f"{path}Data/MackeyGlass/{data_filename}.csv")
         data = df['x'].values
-        data = data.reshape(-1,1)
-        data = data[::10]
+        # data = mackey_glass(n_timesteps=2000)
+        data = data.reshape(-1, 1)
+        data = data[::2]
         perc_init_fit=0.1
-        perc_input_fit=0.6
+        perc_input_fit=0.5
         perc_init_gen=0.1
-        perc_input_gen=0.6
-        perc_gen=0.99-perc_input_gen-perc_init_gen
+        perc_input_gen=0.5
+        perc_gen=0.9-perc_input_gen-perc_init_gen
 
 
     # scale data
