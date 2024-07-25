@@ -39,15 +39,18 @@ n_samples = 30
 # }
 
 search_space = {
-    'reservoir_size': [2048],
-    'spectral_radius': [0.8, 0.99, 1.0, 1.01],
-    'leaking_rate': [0.15],
+    'reservoir_size': [1024],
+    'spectral_radius': [0.99],
+    'leaking_rate': [0.15, 0.2, 0.21, 0.25],
     'connectivity': [0.1],
-    'ridge_alpha': [0.5e-8, 1e-8, 1e-9, 1e-10]
+    'ridge_alpha': [1e-8]
 }
 
 # create a list to store the results
 results = []
+
+# generated results
+generated_results = []
 
 # states
 hh = []
@@ -129,9 +132,8 @@ for i in range(permutations_dicts.__len__()):
         plt.close()
 
     elif problem == "MackeyGlass":
-        print("sium")
         # plot the data in 2D
-        plt.figure(figsize=(10, 10))
+        plt.figure(figsize=(15, 15))
         plt.plot(target_gen[:, 0], label='True')
         plt.plot(X_gen[:, 0], label='Generated')
         plt.title(
@@ -140,7 +142,8 @@ for i in range(permutations_dicts.__len__()):
         plt.ylabel('Y')
         plt.legend()
         plt.grid()
-        plt.savefig(f"../Media/8/{hyperparams['reservoir_size']}_{hyperparams['spectral_radius']}_{hyperparams['leaking_rate']}_{hyperparams['connectivity']}_{hyperparams['ridge_alpha']}.png")
+        # plt.savefig(f"../Media/8/{hyperparams['reservoir_size']}_{hyperparams['spectral_radius']}_{hyperparams['leaking_rate']}_{hyperparams['connectivity']}_{hyperparams['ridge_alpha']}.png")
+        plt.show()
 
     X_t = X_gen
 
@@ -161,7 +164,20 @@ for i in range(permutations_dicts.__len__()):
         'nmse': nmse
     })
 
+    # each run append the generated results to a variable
+    generated_results.append(X_t)
 
+# plot the results and the true data
+plt.figure(figsize=(15, 10))
+# make the line thicker
+plt.plot(target_gen[:, 0], label='True', linewidth=3 )
+for i in range(permutations_dicts.__len__()):
+    plt.plot(generated_results[i][:, 0], label=search_space['leaking_rate'][i])
+plt.xlabel('Time')
+plt.ylabel('x')
+plt.legend()
+plt.grid()
+plt.show()
 
 # plot the results
 rmse = [r['rmse'] for r in results]
