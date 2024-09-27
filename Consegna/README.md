@@ -1,6 +1,6 @@
 # Chaotic time series prediction using Reservoir Computing
 
-> The project report is available at `Report - Chaotic Time series prediction.pdf****`
+> The project report is available at `Report - Chaotic Time series prediction.pdf`
 
 ## Hands on
 The main file is `main.py`. From there the prediction of three
